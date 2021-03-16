@@ -4,6 +4,7 @@
 #include <memory>
 #include "vector/Vector4D.h"
 #include "vector/Vector3D.h"
+#include "objects/Plane.h"
 #include "objects/Object.h"
 #include "objects/Sphere.h"
 #include "Light.h"
@@ -11,16 +12,18 @@
 int main() {
 	const double maxDist = 1000000.0;
 	const unsigned int maxReflects = 3;
-	unsigned int width{ 1920 };
-	unsigned int height{ 1080 };
+	unsigned int width{ 800 };
+	unsigned int height{ 800 };
 	double ratio{ static_cast<double>(width) / height };
 	std::vector<std::unique_ptr<Object>> objects;
-	objects.push_back(std::make_unique<Sphere>(1, Vector3D{ 0, 0, 10 }, Vector3D{ 0.1, 0.0, 0.0 }, Vector3D{ 0.7, 0.0, 0.0 }, Vector3D{ 1.0, 1.0, 1.0 }, 100.0, 0.5));
-	objects.push_back(std::make_unique<Sphere>(1, Vector3D{ 2, 0, 5 }, Vector3D{ 0.1, 0.0, 0.1 }, Vector3D{ 0.7, 0.0, 0.7 }, Vector3D{ 1.0, 1.0, 1.0 }, 100.0, 0.5));
-	objects.push_back(std::make_unique<Sphere>(1, Vector3D{ 0, 2, 7 }, Vector3D{ 0.0, 0.1, 0.0 }, Vector3D{ 0.0, 0.6, 0.0 }, Vector3D{ 1.0, 1.0, 1.0 }, 100.0, 0.5));
-	objects.push_back(std::make_unique<Sphere>(8998, Vector3D{ 0, -9000, 0 }, Vector3D{ 0.01, 0.01, 0.01 }, Vector3D{ 0.5, 0.5, 0.5 }, Vector3D{ 0.1, 0.1, 0.1 }, 10.0, 0.0));
+	objects.push_back(std::make_unique<Sphere>(1, Vector3D{ 0, 0, 10 }, Vector3D{ 0.1, 0.0, 0.0 }, Vector3D{ 0.7, 0.0, 0.0 }, Vector3D{ 1.0, 1.0, 1.0 }, 100.0, 0.75));
+	objects.push_back(std::make_unique<Sphere>(1, Vector3D{ 2, 0, 5 }, Vector3D{ 0.1, 0.0, 0.1 }, Vector3D{ 0.7, 0.0, 0.7 }, Vector3D{ 1.0, 1.0, 1.0 }, 100.0, 0.75));
+	objects.push_back(std::make_unique<Sphere>(1, Vector3D{ 0, 2, 7 }, Vector3D{ 0.0, 0.1, 0.0 }, Vector3D{ 0.0, 0.6, 0.0 }, Vector3D{ 1.0, 1.0, 1.0 }, 100.0, 0.75));
+	objects.push_back(std::make_unique<Sphere>(10, Vector3D{ 0, 13, 20 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 1.0, 1.0, 1.0 }, 100.0, 1));
+	objects.push_back(std::make_unique<Plane>(Vector3D{ 0, -2, 0 }, Vector3D{ 0.01, 0.01, 0.01 }, Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.25, 0.25, 0.25 }, 0.0, 0.0));
+	Light light{ Vector3D{ 10, 20, -10 }, Vector3D{ 1.0, 1.0, 1.0 }, Vector3D{ 1.0, 1.0, 1.0 }, Vector3D{ 1.0, 1.0, 1.0 } };
+
 	Vector3D cameraPosition{ 0, 0, -1 };
-	Light light{ Vector3D{ 5, 10, 0 }, Vector3D{ 1.0, 1.0, 1.0 }, Vector3D{ 1.0, 1.0, 1.0 }, Vector3D{ 1.0, 1.0, 1.0 } };
 	Vector4D screen{ -1, 1 / ratio, 1, -1 / ratio };  // left, top, right, bottom
 
 	png::image<png::rgb_pixel_16> image{ width, height };
@@ -49,7 +52,7 @@ int main() {
 
 
 					// checking lighting
-					Vector3D normalVector = Vector3D::normalize(intersection - (*obj)->getPosition());
+					Vector3D normalVector = (*obj)->getNormal(intersection);
 					Vector3D shiftedPoint{ intersection + normalVector * 1e-5 };  // shifted so it doesn't detect itself as between the light source
 					Vector3D lightVector = Vector3D::normalize(light.position - shiftedPoint);
 					Ray lightRay{ shiftedPoint, lightVector };

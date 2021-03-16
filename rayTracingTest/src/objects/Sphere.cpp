@@ -3,6 +3,10 @@ Sphere::Sphere(double rad, Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, 
 
 }
 
+Vector3D Sphere::getNormal(const Vector3D& intersection) {
+	return Vector3D::normalize(intersection - position);
+}
+
 double Sphere::intersects(const Ray& ray) {
 	double b = 2 * (ray.direction * (ray.position - position));
 	double c = Vector3D::magnitudeSquared(ray.position - position) - radius * radius;

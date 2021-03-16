@@ -19,6 +19,10 @@ Vector3D& Object::getSpecular() {
 	return specular;
 }
 
+Vector3D Object::getNormal(const Vector3D& intersection) {
+	return Vector3D{ 0, 0, 0 };
+}
+
 double Object::getShininess() {
 	return shininess;
 }
