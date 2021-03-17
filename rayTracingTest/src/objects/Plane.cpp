@@ -1,6 +1,6 @@
 #include "Plane.h"
 
-Plane::Plane(Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, double sh, double re) : Object{ pos, am, di, sp, sh, re } {
+Plane::Plane(Vector3D pos, Material mat) : Object{ pos, mat} {
 
 }
 

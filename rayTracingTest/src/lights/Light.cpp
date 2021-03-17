@@ -8,6 +8,6 @@ Light::Light(Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, double in) : p
 
 }
 
-double Light::getIntensityAt(Vector3D point) {
+double Light::getIntensityAt(const Vector3D& point) {
 	return intensity;
 }

@@ -6,7 +6,7 @@ class Light
 public:
 	Light(Vector3D pos, Vector3D am, Vector3D di, Vector3D sp);
 	Light(Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, double in);
-	virtual double getIntensityAt(Vector3D point);
+	virtual double getIntensityAt(const Vector3D& point);
 	Vector3D position, ambient, diffuse, specular;
 	double intensity;
 

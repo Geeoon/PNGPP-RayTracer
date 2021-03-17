@@ -8,6 +8,6 @@ PointLight::PointLight(Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, doub
 
 }
 
-double PointLight::getIntensityAt(Vector3D point) {
+double PointLight::getIntensityAt(const Vector3D& point) {
 	return intensity / (Vector3D::magnitude(position - point) * dropOffValue);
 }

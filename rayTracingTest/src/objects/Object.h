@@ -1,19 +1,16 @@
 #pragma once
 #include <vector>
 #include <memory>
+#include "../materials/Material.h"
 #include "../vector/Vector3D.h"
 #include "../vector/Ray.h"
 
 class Object {
 public:
-	Object(Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, double sh, double re);
+	Object(Vector3D pos, Material mat);
 	Vector3D& getPosition();
-	Vector3D& getAmbient();
-	Vector3D& getDiffuse();
-	Vector3D& getSpecular();
+	Material& getMaterial();
 	virtual Vector3D getNormal(const Vector3D& intersection, const Ray& ray);
-	double getShininess();
-	double getReflection();
 
 	virtual double intersects(const Ray& ray) {
 		return 0;
@@ -37,6 +34,6 @@ public:
 	}
 
 protected:
-	Vector3D position, ambient, diffuse, specular;
-	double shininess, reflection;
+	Material material;
+	Vector3D position;
 };

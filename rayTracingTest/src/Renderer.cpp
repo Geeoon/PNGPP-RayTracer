@@ -42,20 +42,20 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 							Vector3D rgb{ 0.0, 0.0, 0.0 };
 
 							// ambient
-							rgb = rgb + ((*obj)->getAmbient().multiply(lights[l]->ambient * lights[l]->getIntensityAt(intersection)));
+							rgb = rgb + ((*obj)->getMaterial().getAmbient().multiply(lights[l]->ambient * lights[l]->getIntensityAt(intersection)));
 
 							// diffuse
-							rgb = rgb + ((*obj)->getDiffuse().multiply(lights[l]->diffuse * lights[l]->getIntensityAt(intersection))) * (lightVector * normalVector);
+							rgb = rgb + ((*obj)->getMaterial().getDiffuse().multiply(lights[l]->diffuse * lights[l]->getIntensityAt(intersection))) * (lightVector * normalVector);
 
 							//specular
 							Vector3D cameraVector{ Vector3D::normalize(cameraPosition - intersection) };
 							Vector3D H{ Vector3D::normalize(lightVector + cameraVector) };
-							rgb = rgb + (*obj)->getSpecular().multiply(lights[l]->specular * lights[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getShininess() / 4);
+							rgb = rgb + (*obj)->getMaterial().getSpecular().multiply(lights[l]->specular * lights[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getMaterial().getShininess() / 4);
 
 
 							//reflection
 							finalColor = finalColor + rgb * reflection;
-							reflection *= (*obj)->getReflection();
+							reflection *= (*obj)->getMaterial().getReflection();
 
 							ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
 						}

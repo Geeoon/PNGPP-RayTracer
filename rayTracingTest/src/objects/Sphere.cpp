@@ -1,5 +1,5 @@
 #include "Sphere.h"
-Sphere::Sphere(double rad, Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, double sh, double re) : radius{ rad }, Object { pos, am, di, sp, sh, re }  {
+Sphere::Sphere(double rad, Vector3D pos, Material mat) : radius{ rad }, Object { pos, mat }  {
 
 }
 
