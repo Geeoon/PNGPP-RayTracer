@@ -1,6 +1,6 @@
 #include "Plane.h"
 
-Plane::Plane(Vector3D pos, Material mat) : Object{ pos, mat} {
+Plane::Plane(Vector3D pos, std::unique_ptr<Material> mat) : Object{ pos, std::move(mat) } {
 
 }
 

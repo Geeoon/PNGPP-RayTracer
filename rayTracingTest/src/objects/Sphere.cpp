@@ -1,5 +1,5 @@
 #include "Sphere.h"
-Sphere::Sphere(double rad, Vector3D pos, Material mat) : radius{ rad }, Object { pos, mat }  {
+Sphere::Sphere(double rad, Vector3D pos, std::unique_ptr<Material> mat) : radius{ rad }, Object { pos, std::move(mat) }  {
 
 }
 

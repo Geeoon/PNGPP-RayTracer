@@ -7,9 +7,9 @@
 
 class Object {
 public:
-	Object(Vector3D pos, Material mat);
+	Object(Vector3D pos, std::unique_ptr<Material> mat);
 	Vector3D& getPosition();
-	Material& getMaterial();
+	std::unique_ptr<Material>& getMaterial();
 	virtual Vector3D getNormal(const Vector3D& intersection, const Ray& ray);
 
 	virtual double intersects(const Ray& ray) {
@@ -34,6 +34,6 @@ public:
 	}
 
 protected:
-	Material material;
+	std::unique_ptr<Material> material;
 	Vector3D position;
 };
