@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Renderer.cpp" />
     <ClCompile Include="src\objects\Plane.cpp" />
     <ClCompile Include="src\Light.cpp" />
     <ClCompile Include="src\vector\Ray.cpp" />
@@ -149,6 +150,7 @@
     <ClCompile Include="src\vector\Vector4D.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\objects\Plane.h" />
     <ClInclude Include="src\Light.h" />
     <ClInclude Include="src\vector\Ray.h" />
