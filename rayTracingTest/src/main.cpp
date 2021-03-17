@@ -29,7 +29,7 @@ int main() {
 	std::vector<std::unique_ptr<Light>> lights;
 	
 	//lights.push_back(std::make_unique<Light>(Vector3D{ 100.0, 100.0, -100.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }));
-	lights.push_back(std::make_unique<PointLight>(Vector3D{ 0.0, 0.5, 0.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, 2.5));
+	lights.push_back(std::make_unique<PointLight>(Vector3D{ 0.0, 0.5, -1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, 0.25));
 
 	Vector3D cameraPosition{ 0, 1, -5 };
 	Vector3D cameraAngle{ 0, 0, 0 };  //in radians
