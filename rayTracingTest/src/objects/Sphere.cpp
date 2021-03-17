@@ -3,7 +3,7 @@ Sphere::Sphere(double rad, Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, 
 
 }
 
-Vector3D Sphere::getNormal(const Vector3D& intersection) {
+Vector3D Sphere::getNormal(const Vector3D& intersection, const Ray& ray) {
 	return Vector3D::normalize(intersection - position);
 }
 

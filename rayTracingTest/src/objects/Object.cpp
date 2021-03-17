@@ -19,7 +19,7 @@ Vector3D& Object::getSpecular() {
 	return specular;
 }
 
-Vector3D Object::getNormal(const Vector3D& intersection) {
+Vector3D Object::getNormal(const Vector3D& intersection, const Ray& ray) {
 	return Vector3D{ 0, 0, 0 };
 }
 

@@ -4,8 +4,12 @@ Plane::Plane(Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, double sh, dou
 
 }
 
-Vector3D Plane::getNormal(const Vector3D& intersection) {
-	return Vector3D{ 0, 1, 0 };
+Vector3D Plane::getNormal(const Vector3D& intersection, const Ray& ray) {
+	if (ray.direction.y < 0) {
+		return Vector3D{ 0, 1, 0 };
+	} else {
+		return Vector3D{ 0, -1, 0 };
+	}
 }
 
 double Plane::intersects(const Ray& ray) {

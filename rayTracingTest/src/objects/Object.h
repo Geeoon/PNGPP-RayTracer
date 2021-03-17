@@ -11,7 +11,7 @@ public:
 	Vector3D& getAmbient();
 	Vector3D& getDiffuse();
 	Vector3D& getSpecular();
-	virtual Vector3D getNormal(const Vector3D& intersection);
+	virtual Vector3D getNormal(const Vector3D& intersection, const Ray& ray);
 	double getShininess();
 	double getReflection();
 
