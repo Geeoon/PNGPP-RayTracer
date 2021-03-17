@@ -24,7 +24,7 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 				for (unsigned int i = 0; i < maxReflects; i++) {
 					double dist{ maxDist };
 					std::unique_ptr<Object>* obj{ nullptr };
-					obj = Object::nearestObject(objects, dist, ray);
+					obj = Object::nearestObject(objects, dist, ray);  // nearest object in ray's path
 					if (obj) {  // if it hits an object
 						Vector3D intersection{ ray.position + ray.direction * dist };  // point of intersection
 
@@ -53,6 +53,13 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 							rgb = rgb + (*obj)->getMaterial()->getSpecular(intersection).multiply(lights[l]->specular * lights[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getMaterial()->getShininess(intersection) / 4);
 
 
+							//reflection
+							finalColor = finalColor + rgb * reflection;
+							reflection *= (*obj)->getMaterial()->getReflection(intersection);
+
+							ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
+						} else {
+							Vector3D rgb{ 0.0, 0.0, 0.0 };
 							//reflection
 							finalColor = finalColor + rgb * reflection;
 							reflection *= (*obj)->getMaterial()->getReflection(intersection);
