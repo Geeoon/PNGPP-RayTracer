@@ -48,6 +48,10 @@ public:
 	static double magnitudeSquared(const Vector3D& vector) {
 		return vector.x * vector.x + vector.y * vector.y + vector.z * vector.z;
 	}
+	
+	static Vector3D rotate(const Vector3D& vector, const Vector3D& rotation) {
+
+	}
 
 	Vector3D multiply(const Vector3D& other) {  // multiply corrosponding
 		return Vector3D{ x * other.x, y * other.y, z * other.z };
@@ -72,6 +76,7 @@ public:
 	double operator*(const Vector3D& other) const {  // dot product
 		return x * other.x + y * other.y + z * other.z;
 	}
+
 
 	double x, y, z;
 };

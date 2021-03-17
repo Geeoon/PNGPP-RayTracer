@@ -14,6 +14,7 @@ public:
 	virtual Vector3D getNormal(const Vector3D& intersection);
 	double getShininess();
 	double getReflection();
+
 	virtual double intersects(const Ray& ray) {
 		return 0;
 	}
