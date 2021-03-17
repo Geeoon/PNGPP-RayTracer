@@ -42,15 +42,15 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 							Vector3D rgb{ 0.0, 0.0, 0.0 };
 
 							// ambient
-							rgb = rgb + ((*obj)->getAmbient().multiply(lights[l]->ambient));
+							rgb = rgb + ((*obj)->getAmbient().multiply(lights[l]->ambient * lights[l]->getIntensityAt(intersection)));
 
 							// diffuse
-							rgb = rgb + ((*obj)->getDiffuse().multiply(lights[l]->diffuse)) * (lightVector * normalVector);
+							rgb = rgb + ((*obj)->getDiffuse().multiply(lights[l]->diffuse * lights[l]->getIntensityAt(intersection))) * (lightVector * normalVector);
 
 							//specular
 							Vector3D cameraVector{ Vector3D::normalize(cameraPosition - intersection) };
 							Vector3D H{ Vector3D::normalize(lightVector + cameraVector) };
-							rgb = rgb + (*obj)->getSpecular().multiply(lights[l]->specular) * pow((normalVector * H), (*obj)->getShininess() / 4);
+							rgb = rgb + (*obj)->getSpecular().multiply(lights[l]->specular * lights[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getShininess() / 4);
 
 
 							//reflection

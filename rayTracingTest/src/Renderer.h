@@ -5,7 +5,7 @@
 #include "vector/Vector4D.h"
 #include "vector/Vector3D.h"
 #include "objects/Object.h"
-#include "Light.h"
+#include "lights/Light.h"
 
 class Renderer
 {

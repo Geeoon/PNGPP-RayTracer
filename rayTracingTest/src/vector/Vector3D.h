@@ -65,6 +65,10 @@ public:
 		return Vector3D{ scalar * x, scalar * y, scalar * z };
 	}
 
+	Vector3D operator/(double scalar) const {
+		return Vector3D{ x / scalar, y / scalar, z / scalar };
+	}
+
 	Vector3D operator+(const Vector3D& other) const {
 		return Vector3D{ x + other.x, y + other.y, z + other.z };
 	}
