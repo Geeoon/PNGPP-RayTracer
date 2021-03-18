@@ -31,14 +31,14 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 
 						// checking lighting
 						Vector3D normalVector = (*obj)->getNormal(intersection, ray);
-						Vector3D shiftedPoint{ intersection + normalVector * 1e-5 };  // shifted so it doesn't detect itself as between the light source
+						Vector3D shiftedPoint{ intersection + normalVector * 1e-6 };  // shifted so it doesn't detect itself as between the light source
 						Vector3D lightVector = Vector3D::normalize(lights[l]->position - shiftedPoint);
 						Ray lightRay{ shiftedPoint, lightVector };
 
 						double distanceToBetweenObject{ maxDist };
 						Object::nearestObject(objects, distanceToBetweenObject, lightRay);
 
-						if (Vector3D::magnitude(lights[l]->position - shiftedPoint) < distanceToBetweenObject) {  // if no objet is in the way
+						if (Vector3D::magnitude(lights[l]->position - shiftedPoint) < distanceToBetweenObject) {  // if no object is in the way
 							Vector3D rgb{ 0.0, 0.0, 0.0 };
 
 							// ambient
@@ -63,7 +63,9 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 							//reflection
 							finalColor = finalColor + rgb * reflection;
 							reflection *= (*obj)->getMaterial()->getReflection(intersection);
-
+							if (reflection == 0) {
+								break;
+							}
 							ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
 						}
 					} else {

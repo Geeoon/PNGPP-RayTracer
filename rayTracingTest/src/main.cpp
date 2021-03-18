@@ -22,20 +22,22 @@ int main() {
 	unsigned int height{ 400 };
 	double ratio{ static_cast<double>(width) / height };
 	std::vector<std::unique_ptr<Object>> objects;
-	//objects.push_back(std::make_unique<Sphere>(2, Vector3D{ 0, 0, 4 }, std::make_unique<Material>(Vector3D{ 0.1, 0.0, 0.0 }, Vector3D{ 0.7, 0.0, 0.0 }, Vector3D{ 0.1, 0.1, 0.1 }, 100.0, 0.5)));
-	objects.push_back(std::make_unique<Sphere>(3, Vector3D{ 0, 2, 3 }, std::make_unique<Material>(Vector3D{ .1, .1, .1 }, Vector3D{ .0, .0, .0 }, Vector3D{ 0, 0, 0 }, 100.0, 1)));
-	//objects.push_back(std::make_unique<Sphere>(2, Vector3D{ 5, 0, 4 }, std::make_unique<Material>(Vector3D{ 0.1, 0.0, 0.1 }, Vector3D{ 0.7, 0.0, 0.7 }, Vector3D{ 0.1, 0.1, 0.1 }, 100.0, 0.5)));
-	//objects.push_back(std::make_unique<Sphere>(2, Vector3D{ -5, 0, 4 }, std::make_unique<Material>(Vector3D{ 0.0, 0.1, 0.0 }, Vector3D{ 0.0, 0.6, 0.0 }, Vector3D{ 0.1, 0.1, 0.1 }, 100.0, 0.5)));
-	//objects.push_back(std::make_unique<Plane>(Vector3D{ 0, -2, 0 }, std::make_unique<Material>(Vector3D{ 0.4, 0.4, 0.4 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0.1, 0.1, 0.1 }, 0, 0)));  // floor outside
-	objects.push_back(std::make_unique<Plane>(Vector3D{ 0, -2, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.0, 0.0, 0.7 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0.1, 0.1, 0.1 }, 100, 0.25)));  // floor checkerboard
-	//objects.push_back(std::make_unique<Plane>(Vector3D{ 0, 101, 0 }, std::make_unique<Material>(Vector3D{ 0.85, 0.91, 1 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, 0, 0)));  // sky
+	objects.push_back(std::make_unique<Sphere>(2, Vector3D{ 0, 0, 4 }, std::make_unique<Material>(Vector3D{ 0.1, 0.0, 0.0 }, Vector3D{ 0.7, 0.0, 0.0 }, Vector3D{ 0.1, 0.1, 0.1 }, 100.0, 0.5)));
+	objects.push_back(std::make_unique<Sphere>(2, Vector3D{ 5, 0, 4 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.1 }, Vector3D{ 0.0, 0.0, 0.7 }, Vector3D{ 0.1, 0.1, 0.1 }, 100.0, 0.5)));
+	objects.push_back(std::make_unique<Sphere>(2, Vector3D{ -5, 0, 4 }, std::make_unique<Material>(Vector3D{ 0.0, 0.1, 0.0 }, Vector3D{ 0.0, 0.6, 0.0 }, Vector3D{ 0.1, 0.1, 0.1 }, 100.0, 0.5)));
+	objects.push_back(std::make_unique<Sphere>(5, Vector3D{ 0, 5, 10 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 100.0, 1)));
+	objects.push_back(std::make_unique<Plane>(Vector3D{ 0, 5, 25 }, Vector3D{ 0, 0, -1 }, std::make_unique<Material>(Vector3D{ 0.1, 0.0, 0.0 }, Vector3D{ 0.3, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 50, 0)));  // back wall
+	objects.push_back(std::make_unique<Plane>(Vector3D{ -25, 0, 0 }, Vector3D{ 1, 0, 0 }, std::make_unique<Material>(Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.3, 0.3, 0.3 }, Vector3D{ 0.0, 0.0, 0.0 }, 50, 0)));  // left wall
+	objects.push_back(std::make_unique<Plane>(Vector3D{ 25, 0, 0}, Vector3D{ -1, 0, 0 }, std::make_unique<Material>(Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.3, 0.3, 0.3 }, Vector3D{ 0.0, 0.0, 0.0 }, 50, 0)));  // right wall
+	objects.push_back(std::make_unique<Plane>(Vector3D{ 0, -2, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.4, 0.4, 0.4 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0.1, 0.1, 0.1 }, 0, .10, 3)));  // floor outside
+	//objects.push_back(std::make_unique<Plane>(Vector3D{ 0, 101, 0 }, std::make_unique<Material>(Vector3D{ 0.85, 0.91, 1 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, 0, 0)));  // sky outside
+	objects.push_back(std::make_unique<Plane>(Vector3D{ 0, 20, 0 }, Vector3D{ 0, -1, 0 }, std::make_unique<Material>(Vector3D{ 0.2, 0.2, .2 }, Vector3D{ .5, .5, .5 }, Vector3D{ 0, 0, 0 }, 50, 0)));  // ceiling inside
 	std::vector<std::unique_ptr<Light>> lights;
 	
-	//lights.push_back(std::make_unique<Light>(Vector3D{ 100.0, 100.0, -100.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }));
-	lights.push_back(std::make_unique<Light>(Vector3D{ 0.0, 20.0, 3.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }));
-	//lights.push_back(std::make_unique<PointLight>(Vector3D{ 0.0, 0.5, -1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, 0.25));
+	//lights.push_back(std::make_unique<Light>(Vector3D{ 100.0, 100.0, -100.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }));  // sun
+	lights.push_back(std::make_unique<PointLight>(Vector3D{ 0.0, 19, 5.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, .1, 2.0));  // ceiling light
 
-	Vector3D cameraPosition{ 0, 1, -5 };
+	Vector3D cameraPosition{ 0, 5, -15 };
 	Vector3D cameraAngle{ 0, 0, 0 };  // in radians
 
 

@@ -1,11 +1,11 @@
 #include "Checkerboard.h"
 
-Checkerboard::Checkerboard(Vector3D amb, Vector3D dif, Vector3D spe, double shi, double ref) : Material{ amb, dif, spe, shi, ref } {
+Checkerboard::Checkerboard(Vector3D amb, Vector3D dif, Vector3D spe, double shi, double ref, double til) : Material{ amb, dif, spe, shi, ref }, tiling{ til } {  // for use on flat planes
 
 }
 
 Vector3D Checkerboard::getAmbient(const Vector3D& point) {
-	if (ceil(sin(point.x) * sin(point.z)) == 0) {
+	if (ceil(sin(point.x * tiling) * sin(point.z * tiling)) == 0) {
 		return ambient;
 	} else {
 		return Vector3D{ 0, 0, 0 };
@@ -13,7 +13,7 @@ Vector3D Checkerboard::getAmbient(const Vector3D& point) {
 }
 
 Vector3D Checkerboard::getDiffuse(const Vector3D& point) {
-	if (ceil(sin(point.x) * sin(point.z)) == 0) {
+	if (ceil(sin(point.x * tiling) * sin(point.z * tiling)) == 0) {
 		return diffuse;
 	} else {
 		return Vector3D{ 0, 0, 0 };

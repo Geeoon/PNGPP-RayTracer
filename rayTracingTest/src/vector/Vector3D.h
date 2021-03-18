@@ -76,6 +76,10 @@ public:
 	Vector3D operator-(const Vector3D& other) const {
 		return Vector3D{ x - other.x, y - other.y, z - other.z };
 	}
+	
+	Vector3D operator-() const {
+		return Vector3D{ -x, -y, -z };
+	}
 
 	double operator*(const Vector3D& other) const {  // dot product
 		return x * other.x + y * other.y + z * other.z;

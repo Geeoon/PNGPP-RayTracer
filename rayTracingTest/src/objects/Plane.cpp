@@ -1,25 +1,31 @@
 #include "Plane.h"
 
-Plane::Plane(Vector3D pos, std::unique_ptr<Material> mat) : Object{ pos, std::move(mat) } {
+Plane::Plane(Vector3D pos, std::unique_ptr<Material> mat) : Object{ pos, std::move(mat) }, orientation{ Vector3D{ 0, 1, 0 } } {
+
+}
+
+Plane::Plane(Vector3D pos, Vector3D orien, std::unique_ptr<Material> mat) : Object{ pos, std::move(mat) }, orientation{ Vector3D::normalize(orien) } {
 
 }
 
 Vector3D Plane::getNormal(const Vector3D& intersection, const Ray& ray) {
-	if (ray.direction.y < 0) {
-		return Vector3D{ 0, 1, 0 };
-	} else {
-		return Vector3D{ 0, -1, 0 };
+	double denom = ray.direction * orientation;
+	if (denom < 1e-6) {
+		return orientation;
 	}
+	return -orientation;
 }
 
 double Plane::intersects(const Ray& ray) {
-	if ((ray.direction.y > 0 && ray.position.y > position.y) || (ray.direction.y < 0 && ray.position.y < position.y) || (ray.direction.y == 0)) {
+	double denom = ray.direction * orientation;
+	if (abs(denom) <= 1e-6) {
 		return -1.0;
 	} else {
-		Vector3D point{ 0, position.y, 0 };
-		double deltay = position.y - ray.position.y;
-		point.x = ray.position.x + (ray.direction.x / ray.direction.y * deltay);
-		point.z = ray.position.z + (ray.direction.z / ray.direction.y * deltay);
-		return Vector3D::magnitude(ray.position - point);
+		double t = ((position - ray.position) * orientation) / denom;
+		if (t < 0) {
+			return -1.0;
+		}
+		return t;
 	}
+	
 }
