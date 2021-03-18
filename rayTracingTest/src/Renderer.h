@@ -6,12 +6,13 @@
 #include "vector/Vector3D.h"
 #include "objects/Object.h"
 #include "lights/Light.h"
+#include "Camera.h"
 
 class Renderer
 {
 public:
 	Renderer();
-	png::image<png::rgb_pixel_16>& render(unsigned int maxReflects, unsigned int width, unsigned int height, std::vector<std::unique_ptr<Object>>& objects, std::vector<std::unique_ptr<Light>>& lights, Vector3D cameraPosition, Vector3D cameraAngle);
+	png::image<png::rgb_pixel_16>& render(unsigned int maxReflects, unsigned int width, unsigned int height, std::vector<std::unique_ptr<Object>>& objects, std::vector<std::unique_ptr<Light>>& lights, Camera& cam);
 
 private:
 	const double maxDist;

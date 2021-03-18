@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\materials\Material.cpp" />
     <ClCompile Include="src\materials\Checkerboard.cpp" />
     <ClCompile Include="src\lights\PointLight.cpp" />
@@ -153,6 +154,7 @@
     <ClCompile Include="src\vector\Vector4D.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\materials\Material.h" />
     <ClInclude Include="src\materials\Checkerboard.h" />
     <ClInclude Include="src\lights\PointLight.h" />
