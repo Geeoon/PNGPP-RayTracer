@@ -1,17 +1,19 @@
 #pragma once
+#include <memory>
+#include "../materials/Material.h"
 #include "../vector/Vector3D.h"
 
 class Light
 {
 public:
-	Light(Vector3D pos, Vector3D am, Vector3D di, Vector3D sp);
-	Light(Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, double in);
+	Light(Vector3D pos, std::unique_ptr<Material> mat);
+	Light(Vector3D pos, std::unique_ptr<Material> mat, double in);
 	virtual double getIntensityAt(const Vector3D& point);
-	Vector3D position, ambient, diffuse, specular;
+	std::unique_ptr<Material>& getMaterial();
+	Vector3D position;
 	double intensity;
 
-	Light operator/(double factor) const {
-		return Light{ position, ambient / factor, diffuse / factor, specular / factor };
-	}
+private:
+	std::unique_ptr<Material> material;
 };
 

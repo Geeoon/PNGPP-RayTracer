@@ -44,15 +44,15 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 							rgb = rgb + (*obj)->getMaterial()->getInherent();
 
 							// ambient
-							rgb = rgb + ((*obj)->getMaterial()->getAmbient(intersection).multiply(lights[l]->ambient * lights[l]->getIntensityAt(intersection)));
+							rgb = rgb + ((*obj)->getMaterial()->getAmbient(intersection).multiply(lights[l]->getMaterial()->getAmbient() * lights[l]->getIntensityAt(intersection)));
 
 							// diffuse
-							rgb = rgb + ((*obj)->getMaterial()->getDiffuse(intersection).multiply(lights[l]->diffuse * lights[l]->getIntensityAt(intersection))) * (lightVector * normalVector);
+							rgb = rgb + ((*obj)->getMaterial()->getDiffuse(intersection).multiply(lights[l]->getMaterial()->getDiffuse() * lights[l]->getIntensityAt(intersection))) * (lightVector * normalVector);
 
 							// specular
 							Vector3D cameraVector{ Vector3D::normalize(cam.position - intersection) };
 							Vector3D H{ Vector3D::normalize(lightVector + cameraVector) };
-							rgb = rgb + (*obj)->getMaterial()->getSpecular(intersection).multiply(lights[l]->specular * lights[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getMaterial()->getShininess(intersection) / 4);
+							rgb = rgb + (*obj)->getMaterial()->getSpecular(intersection).multiply(lights[l]->getMaterial()->getSpecular() * lights[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getMaterial()->getShininess(intersection) / 4);
 
 
 							// reflection

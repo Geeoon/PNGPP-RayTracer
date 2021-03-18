@@ -1,10 +1,13 @@
 #include "PointLight.h"
 
-PointLight::PointLight(Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, double dropOff) : Light{ pos, am, di, sp }, dropOffValue{ dropOff } {
+PointLight::PointLight(Vector3D pos, std::unique_ptr<Material> mat) : Light{ pos, std::move(mat) }, dropOffValue{ 1.0 } {
+
+}
+PointLight::PointLight(Vector3D pos, std::unique_ptr<Material> mat, double dropOff) : Light{ pos, std::move(mat) }, dropOffValue{ dropOff } {
 
 }
 
-PointLight::PointLight(Vector3D pos, Vector3D am, Vector3D di, Vector3D sp, double dropOff, double in) : Light{ pos, am, di, sp, in }, dropOffValue{ dropOff } {
+PointLight::PointLight(Vector3D pos, std::unique_ptr<Material> mat, double dropOff, double in) : Light{ pos, std::move(mat), in }, dropOffValue{ dropOff } {
 
 }
 

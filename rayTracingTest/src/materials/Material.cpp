@@ -1,10 +1,14 @@
 #include "Material.h"
 
+Material::Material(Vector3D amb, Vector3D dif, Vector3D spe) : ambient{ amb }, diffuse{ dif }, specular{ spe }, shininess{ 0.0 }, reflection{ 0.0 }, inherent{ 0, 0, 0 } {
+
+}
+
 Material::Material(Vector3D amb, Vector3D dif, Vector3D spe, double shi, double ref) : ambient{ amb }, diffuse{ dif }, specular{ spe }, shininess{ shi }, reflection{ ref }, inherent{ 0, 0, 0 } {
 
 }
 
-Material::Material(Vector3D amb, Vector3D dif, Vector3D spe, double shi, double ref, Vector3D inh) : ambient{ amb }, diffuse{ dif }, specular{ spe }, shininess{ shi }, reflection{ ref }, inherent{ inh } {
+Material::Material(Vector3D amb, Vector3D dif, Vector3D spe, Vector3D inh, double shi, double ref) : ambient{ amb }, diffuse{ dif }, specular{ spe }, inherent{ inh }, shininess{ shi }, reflection{ ref } {
 
 }
 
