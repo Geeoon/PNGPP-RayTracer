@@ -4,6 +4,7 @@
 class Material {
 public:
 	Material(Vector3D amb, Vector3D dif, Vector3D spe);
+	Material(Vector3D amb, Vector3D dif, Vector3D spe, Vector3D inh);
 	Material(Vector3D amb, Vector3D dif, Vector3D spe, double shi, double ref);
 	Material(Vector3D amb, Vector3D dif, Vector3D spe, Vector3D inh, double shi, double ref);
 	Vector3D& getInherent();

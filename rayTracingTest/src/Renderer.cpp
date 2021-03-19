@@ -1,6 +1,6 @@
 #include "Renderer.h"
 
-Renderer::Renderer() : maxDist{ DBL_MAX } {
+Renderer::Renderer() : maxDist{ DBL_MAX }, mt_engine{ 1 }, theta_d{ 0.0, 2.0 }, z_d{ -1.0, 1.0 } {
 
 }
 
@@ -17,6 +17,7 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 			double x{ (screen.x) + ((screen.z - screen.x) / image.get_width() * (static_cast<double>(px) + 0.5)) };  // spots on screen for ray to shoot through
 			Vector3D pixel{ x + scene.getCamera()->position.x, y + scene.getCamera()->position.y, scene.getCamera()->position.z + 1 };
 			Vector3D finalColor{ 0, 0, 0 };
+
 			for (size_t l = 0; l < scene.getLights().size(); l++) {
 				Ray ray{ scene.getCamera()->position, Vector3D::normalize(pixel - scene.getCamera()->position) };
 
@@ -25,64 +26,126 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 					double dist{ maxDist };
 					std::unique_ptr<Object>* obj{ nullptr };
 					obj = Object::nearestObject(scene.getObjects(), dist, ray);  // nearest object in ray's path
-					if (obj) {  // if it hits an object
-						Vector3D intersection{ ray.position + ray.direction * dist };  // point of intersection
-
-
-						// checking lighting
-						Vector3D normalVector = (*obj)->getNormal(intersection, ray);
-						Vector3D shiftedPoint{ intersection + normalVector * 1e-6 };  // shifted so it doesn't detect itself as between the light source
-						Vector3D lightVector = Vector3D::normalize(scene.getLights()[l]->position - shiftedPoint);
-						Ray lightRay{ shiftedPoint, lightVector };
-
-						double distanceToBetweenObject{ maxDist };
-						Object::nearestObject(scene.getObjects(), distanceToBetweenObject, lightRay);
-
-						if (Vector3D::magnitude(scene.getLights()[l]->position - shiftedPoint) < distanceToBetweenObject) {  // if no object is in the way
-							Vector3D rgb{ 0.0, 0.0, 0.0 };
-							// inherent color without need of light
-							rgb = rgb + (*obj)->getMaterial()->getInherent();
-
-							// ambient
-							rgb = rgb + ((*obj)->getMaterial()->getAmbient(intersection).multiply(scene.getLights()[l]->getMaterial()->getAmbient() * scene.getLights()[l]->getIntensityAt(intersection)));
-
-							// diffuse
-							rgb = rgb + ((*obj)->getMaterial()->getDiffuse(intersection).multiply(scene.getLights()[l]->getMaterial()->getDiffuse() * scene.getLights()[l]->getIntensityAt(intersection))) * (lightVector * normalVector);
-
-							// specular
-							Vector3D cameraVector{ Vector3D::normalize(scene.getCamera()->position - intersection) };
-							Vector3D H{ Vector3D::normalize(lightVector + cameraVector) };
-							rgb = rgb + (*obj)->getMaterial()->getSpecular(intersection).multiply(scene.getLights()[l]->getMaterial()->getSpecular() * scene.getLights()[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getMaterial()->getShininess(intersection) / 4);
-
-
-							// reflection
-							finalColor = finalColor + rgb * reflection;
-							reflection *= (*obj)->getMaterial()->getReflection(intersection);
-
-							ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
-						} else {
-							Vector3D rgb{ 0.0, 0.0, 0.0 };
-
-							// inherent color without need of light
-							rgb = rgb + (*obj)->getMaterial()->getInherent();
-							
-							// reflection
-							finalColor = finalColor + rgb * reflection;
-							reflection *= (*obj)->getMaterial()->getReflection(intersection);
-							if (reflection == 0) {
-								break;
-							}
-							ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
-						}
-					} else {
+					if (!obj) {  // if it hits no objects
 						break;
+					}
+
+					Vector3D intersection{ ray.position + ray.direction * dist };  // point of intersection
+					if (i == 0 && l == 0) {
+						finalColor = finalColor + (*obj)->getMaterial()->getInherent();
+					}
+
+					// checking lighting
+					Vector3D normalVector = (*obj)->getNormal(intersection, ray);
+					Vector3D shiftedPoint{ intersection + normalVector * 1e-6 };  // shifted so it doesn't detect itself as between the light source
+					Vector3D lightVector = Vector3D::normalize(scene.getLights()[l]->position - shiftedPoint);
+					Ray lightRay{ shiftedPoint, lightVector };
+
+					double distanceToBetweenObject{ maxDist };
+					Object::nearestObject(scene.getObjects(), distanceToBetweenObject, lightRay);
+
+					if (Vector3D::magnitude(scene.getLights()[l]->position - shiftedPoint) < distanceToBetweenObject) {  // if no object is in the way
+						Vector3D rgb{ 0.0, 0.0, 0.0 };
+						// inherent color without need of light
+						//rgb = rgb + (*obj)->getMaterial()->getInherent();
+
+						// ambient
+						rgb = rgb + ((*obj)->getMaterial()->getAmbient(intersection).multiply(scene.getLights()[l]->getMaterial()->getAmbient() * scene.getLights()[l]->getIntensityAt(intersection)));
+
+						// diffuse
+						rgb = rgb + ((*obj)->getMaterial()->getDiffuse(intersection).multiply(scene.getLights()[l]->getMaterial()->getDiffuse() * scene.getLights()[l]->getIntensityAt(intersection))) * (lightVector * normalVector);
+
+						// specular
+						Vector3D cameraVector{ Vector3D::normalize(scene.getCamera()->position - intersection) };
+						Vector3D H{ Vector3D::normalize(lightVector + cameraVector) };
+						rgb = rgb + (*obj)->getMaterial()->getSpecular(intersection).multiply(scene.getLights()[l]->getMaterial()->getSpecular() * scene.getLights()[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getMaterial()->getShininess(intersection) / 4);
+
+
+						// reflection
+						finalColor = finalColor + rgb * reflection;
+						reflection *= (*obj)->getMaterial()->getReflection(intersection);
+
+						ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
+					} else {
+						Vector3D rgb{ 0.0, 0.0, 0.0 };
+
+						// inherent color without need of light
+						//rgb = rgb + (*obj)->getMaterial()->getInherent();
+							
+						// reflection
+						finalColor = finalColor + rgb * reflection;
+						reflection *= (*obj)->getMaterial()->getReflection(intersection);
+						if (reflection == 0) {
+							break;
+						}
+						ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
 					}
 				}
 			}
+
 			finalColor = Vector3D::clip(finalColor, 0, 1);
 			finalColor = finalColor * 65535;
 			image[image.get_height() - (py + 1)][px] = png::rgb_pixel_16{ static_cast<png::uint_16>(finalColor.x), static_cast<png::uint_16>(finalColor.y), static_cast<png::uint_16>(finalColor.z) };
 		}
 	}
 	return image;
+}
+
+png::image<png::rgb_pixel_16>& Renderer::renderPathTracing(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene, unsigned int samples) {
+	
+	double ratio{ static_cast<double>(width) / height };
+	Vector4D screen{ -1, 1 / ratio, 1, -1 / ratio };
+	image = png::image<png::rgb_pixel_16>{ width, height };
+
+	for (png::uint_32 py = 0; py < image.get_height(); py++) {
+		double y{ (screen.w) + ((screen.y - screen.w) / image.get_height() * (static_cast<double>(py) + 0.5)) };  // spots on screen for ray to shoot through
+		for (png::uint_32 px = 0; px < image.get_width(); px++) {
+			double x{ (screen.x) + ((screen.z - screen.x) / image.get_width() * (static_cast<double>(px) + 0.5)) };  // spots on screen for ray to shoot through
+			Vector3D pixel{ x + scene.getCamera()->position.x, y + scene.getCamera()->position.y, scene.getCamera()->position.z + 1 };
+			Vector3D finalColor{ 0, 0, 0 };
+			for (unsigned int i = 0; i < samples; i++) {
+				Ray ray{ scene.getCamera()->position, Vector3D::normalize(pixel - scene.getCamera()->position) };
+				finalColor = finalColor + tracePath(ray, scene, 0, maxReflects);
+			}
+			finalColor = finalColor / samples;
+			finalColor = Vector3D::clip(finalColor, 0, 1);
+			finalColor = finalColor * 65535;
+			image[image.get_height() - (py + 1)][px] = png::rgb_pixel_16{ static_cast<png::uint_16>(finalColor.x), static_cast<png::uint_16>(finalColor.y), static_cast<png::uint_16>(finalColor.z) };
+		}
+	}
+	return image;
+}
+
+Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigned int maxReflects) {
+	if (depth >= maxReflects) {
+		return Vector3D{ 0, 0, 0 };
+	}
+
+	double dist{ maxDist };
+	std::unique_ptr<Object>* obj{ nullptr };
+	obj = Object::nearestObject(scene.getObjects(), dist, ray);  // nearest object in ray's path
+	if (!obj) {  // if it doesn't hit an object
+		return Vector3D{ 0, 0, 0 };
+	}
+
+	Vector3D emittance = (*obj)->getMaterial()->getInherent();
+
+	Vector3D intersection{ ray.position + ray.direction * dist };
+	Vector3D shiftedPoint{ intersection + (*obj)->getNormal(intersection, ray) * 1e-6 };
+	double theta = theta_d(mt_engine) * M_PI;
+	double z = z_d(mt_engine);
+	double k = sqrt(1 - z * z);
+	Vector3D randomDirection{ k*cos(theta), k*sin(theta), z };
+	//Vector3D randomDirection{ 0, 1, 0 };
+	Ray newRay{ shiftedPoint, randomDirection };
+
+	const double p = 1 / (2 * M_PI);  // new ray probablity
+
+	// BRDF
+	double cos_theta = newRay.direction * shiftedPoint;
+	Vector3D BRDF = (*obj)->getMaterial()->getAmbient() / M_PI;
+
+	Vector3D incoming = tracePath(newRay, scene, depth + 1, maxReflects);
+
+	return emittance + (BRDF.multiply(incoming) * cos_theta / p);
 }

@@ -4,6 +4,10 @@ Material::Material(Vector3D amb, Vector3D dif, Vector3D spe) : ambient{ amb }, d
 
 }
 
+Material::Material(Vector3D amb, Vector3D dif, Vector3D spe, Vector3D inh) : ambient{ amb }, diffuse{ dif }, specular{ spe }, inherent{ inh }, shininess{ 0.0 }, reflection{ 0.0 } {
+
+}
+
 Material::Material(Vector3D amb, Vector3D dif, Vector3D spe, double shi, double ref) : ambient{ amb }, diffuse{ dif }, specular{ spe }, shininess{ shi }, reflection{ ref }, inherent{ 0, 0, 0 } {
 
 }
