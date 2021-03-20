@@ -19,8 +19,8 @@
 int main() {
 	const double maxDist = DBL_MAX;
 	const unsigned int maxReflects = 500;
-	unsigned int width{ 400 };
-	unsigned int height{ 400 };
+	unsigned int width{ 1920 };
+	unsigned int height{ 1080 };
 	double ratio{ static_cast<double>(width) / height };
 	Scene sceneRoom{ std::make_unique<Camera>(Vector3D{ 0, 8, -15 }, Vector3D{ 0, 0, 0 }, ratio) };
 	sceneRoom.addLight(std::make_unique<PointLight>(Vector3D{ 0.0, 19, 5.0 }, std::make_unique<Material>(Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, 50, 0), .1, 2.0));
@@ -28,6 +28,7 @@ int main() {
 	sceneRoom.addObject(std::make_unique<Sphere>(2, Vector3D{ 5, 2, 5 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.1 }, Vector3D{ 0.0, 0.0, 0.7 }, Vector3D{ 0.1, 0.1, 0.1 }, 100.0, 0.5)));
 	sceneRoom.addObject(std::make_unique<Sphere>(2, Vector3D{ -5, 2, 5 }, std::make_unique<Material>(Vector3D{ 0.0, 0.1, 0.0 }, Vector3D{ 0.0, 0.6, 0.0 }, Vector3D{ 0.1, 0.1, 0.1 }, 100.0, 0.5)));
 	sceneRoom.addObject(std::make_unique<Sphere>(5, Vector3D{ 0, 5, 12 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 100.0, 1)));
+	sceneRoom.addObject(std::make_unique<Sphere>(2, Vector3D{ -8, 5, 2 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 0.0, 0.0, 1.0, 1.6)));  // refraction test
 	sceneRoom.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 25 }, Vector3D{ 0, 0, -1 }, std::make_unique<Material>(Vector3D{ 0.1, 0.0, 0.0 }, Vector3D{ 0.3, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 50, 0)));  // front wall
 	sceneRoom.addObject(std::make_unique<Plane>(Vector3D{ -25, 0, 0 }, Vector3D{ 1, 0, 0 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.1 }, Vector3D{ 0.0, 0.0, 0.3 }, Vector3D{ 0.0, 0.0, 0.0 }, 50, 0)));  // left wall
 	sceneRoom.addObject(std::make_unique<Plane>(Vector3D{ 25, 0, 0 }, Vector3D{ -1, 0, 0 }, std::make_unique<Material>(Vector3D{ 0.0, 0.1, 0.0 }, Vector3D{ 0.0, 0.3, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 50, 0)));  // right wall
@@ -37,9 +38,9 @@ int main() {
 	
 	Scene storm{ std::make_unique<Camera>(Vector3D{ 0, 8, -15 }, Vector3D{ 0, 0, 0 }, ratio) };
 	storm.addLight(std::make_unique<Light>(Vector3D{ 0, 300, 0 }, std::make_unique<Material>(Vector3D{ 0.18431372549, 0.27058823529, 0.36470588235 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }), 1.0));  // ambient light from sky
-	storm.addLight(std::make_unique<PointLight>(Vector3D{ 6, 1, 0 }, std::make_unique<Material>(Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }), .5, 1.5));
-	storm.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0.1, 0.1, 0.1 }, 0, .10, 3)));  // ground
-	storm.addObject(std::make_unique<Plane>(Vector3D{ 0, 310, 0 }, Vector3D{ 0, -1, 0 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.18431372549, 0.27058823529, 0.36470588235 })));  // sky
+	//storm.addLight(std::make_unique<PointLight>(Vector3D{ 6, 1, 0 }, std::make_unique<Material>(Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }), .5, 1.5));
+	storm.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0.1, 0.1, 0.1 }, 0, 0, 3)));  // ground
+	storm.addObject(std::make_unique<Plane>(Vector3D{ 0, 310, 0 }, Vector3D{ 0, -1, 0 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.18431372549 / 2, 0.27058823529 / 2, 0.36470588235 / 2 })));  // sky
 	storm.addObject(std::make_unique<Sphere>(4, Vector3D{ 0, 4, 0 }, std::make_unique<Material>(Vector3D{ 0.3, 0.3, 0.3 }, Vector3D{ 0.6, 0.6, 0.6 }, Vector3D{ 0.1, 0.1, 0.1 }, 100, 0.25)));  // sphere
 
 	Scene simple{ std::make_unique<Camera>(Vector3D{ 0, 1, 0 }, Vector3D{ 0, 0, 0 }, ratio) };
@@ -47,11 +48,16 @@ int main() {
 	simple.addObject(std::make_unique<Sphere>(2, Vector3D{ 0, 2, 5 }, std::make_unique<Material>(Vector3D{ 0.1, 0.0, 0.0 }, Vector3D{ 0.7, 0.0, 0.0 }, Vector3D{ 0.1, 0.1, 0.1 }, 100.0, 0.5)));
 	simple.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 10 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.3, 0.3, 0.3 }, Vector3D{ 0.5, 0.5, 0.5 }, Vector3D{ 0, 0, 0 }, 0, 0.1, 3)));
 
+	Scene refraction{ std::make_unique<Camera>(Vector3D{ 0, 2, 0 }, Vector3D{ 0, 0, 0 }, ratio) };
+	refraction.addLight(std::make_unique<Light>(Vector3D{ 0, 300, 0 }, std::make_unique<Material>(Vector3D{ 1, 1, 1 }, Vector3D{ 1, 1, 1 }, Vector3D{ 1, 1, 1 }), 1.0));
+	refraction.addObject(std::make_unique<Sphere>(1, Vector3D{ 0, 2, 3 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 0.0, 0.0, 1.0, 1.1)));
+	refraction.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.3, 0.3, 0.3 }, Vector3D{ 0.5, 0.5, 0.5 }, Vector3D{ 0, 0, 0 }, 0, 0.1, 3)));
 
 	Renderer renderer{};
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, sceneRoom);
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, storm);
-	png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, simple);
+	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, simple);
+	png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, refraction);
 
 	image.write("output.png");
 	return 0;

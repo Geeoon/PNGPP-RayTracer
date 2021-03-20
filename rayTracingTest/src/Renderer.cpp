@@ -5,6 +5,7 @@ Renderer::Renderer() : maxDist{ DBL_MAX }, mt_engine{ 1 }, theta_d{ 0.0, 2.0 }, 
 }
 
 png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene) {
+	// https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
 	double dist = maxDist;
 	double ratio{ static_cast<double>(width) / height };
 	Vector4D screen{ -1, 1 / ratio, 1, -1 / ratio};
@@ -20,9 +21,10 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 
 			for (size_t l = 0; l < scene.getLights().size(); l++) {
 				Ray ray{ scene.getCamera()->position, Vector3D::normalize(pixel - scene.getCamera()->position) };
-
 				double reflection = 1;
-				for (unsigned int i = 0; i < maxReflects; i++) {
+				double lastN = 1;
+				std::unique_ptr<Object>* lastObj{ nullptr };
+				for (unsigned int i = 0; i < maxReflects; i++) {  // change to "while (true)" in order to reflect until nothing to reflect.
 					double dist{ maxDist };
 					std::unique_ptr<Object>* obj{ nullptr };
 					obj = Object::nearestObject(scene.getObjects(), dist, ray);  // nearest object in ray's path
@@ -35,7 +37,6 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 						finalColor = finalColor + (*obj)->getMaterial()->getInherent();
 					}
 
-					// checking lighting
 					Vector3D normalVector = (*obj)->getNormal(intersection, ray);
 					Vector3D shiftedPoint{ intersection + normalVector * 1e-6 };  // shifted so it doesn't detect itself as between the light source
 					Vector3D lightVector = Vector3D::normalize(scene.getLights()[l]->position - shiftedPoint);
@@ -43,9 +44,9 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 
 					double distanceToBetweenObject{ maxDist };
 					Object::nearestObject(scene.getObjects(), distanceToBetweenObject, lightRay);
+					Vector3D rgb{ 0.0, 0.0, 0.0 };
 
 					if (Vector3D::magnitude(scene.getLights()[l]->position - shiftedPoint) < distanceToBetweenObject) {  // if no object is in the way
-						Vector3D rgb{ 0.0, 0.0, 0.0 };
 						// inherent color without need of light
 						//rgb = rgb + (*obj)->getMaterial()->getInherent();
 
@@ -60,25 +61,46 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 						Vector3D H{ Vector3D::normalize(lightVector + cameraVector) };
 						rgb = rgb + (*obj)->getMaterial()->getSpecular(intersection).multiply(scene.getLights()[l]->getMaterial()->getSpecular() * scene.getLights()[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getMaterial()->getShininess(intersection) / 4);
 
-
-						// reflection
-						finalColor = finalColor + rgb * reflection;
-						reflection *= (*obj)->getMaterial()->getReflection(intersection);
-
-						ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
 					} else {
-						Vector3D rgb{ 0.0, 0.0, 0.0 };
 
 						// inherent color without need of light
 						//rgb = rgb + (*obj)->getMaterial()->getInherent();
-							
-						// reflection
+						
+					}
+					// reflection / refraction
+					if ((*obj)->getMaterial()->getRefraction(intersection) < (*obj)->getMaterial()->getReflection(intersection)) {  // only doing one or the other for now
+						// reflections
 						finalColor = finalColor + rgb * reflection;
 						reflection *= (*obj)->getMaterial()->getReflection(intersection);
 						if (reflection == 0) {
 							break;
 						}
 						ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
+					} else {
+						// refractions
+						finalColor = finalColor + rgb * reflection;
+						reflection *= (*obj)->getMaterial()->getRefraction(intersection);
+						if (reflection == 0) {
+							break;
+						}
+
+						//snells law
+						shiftedPoint = intersection - normalVector * 1e-6;  // go into the sphere itself
+						const double n1n2 = lastN / (*obj)->getMaterial()->getIndex();
+						Vector3D angleOfRefraction = ray.direction * (n1n2) + normalVector * ((n1n2) * (-ray.direction * normalVector) - sqrt(1 - pow(n1n2, 2) * (1 - pow(-ray.direction * normalVector, 2))));
+						
+
+						ray = Ray{ shiftedPoint, angleOfRefraction };
+
+						if (!lastObj) {
+							lastN = (*obj)->getMaterial()->getIndex();
+							lastObj = obj;
+						} else {
+							lastN = 1;
+							lastObj = nullptr;
+						}
+
+						
 					}
 				}
 			}

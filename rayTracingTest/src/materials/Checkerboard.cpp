@@ -1,6 +1,6 @@
 #include "Checkerboard.h"
 
-Checkerboard::Checkerboard(Vector3D amb, Vector3D dif, Vector3D spe, double shi, double ref, double til) : Material{ amb, dif, spe, shi, ref }, tiling{ til } {  // for use on flat planes
+Checkerboard::Checkerboard(Vector3D amb, Vector3D dif, Vector3D spe, double shi, double ref, double til) : Material{ amb, dif, spe, shi, ref, 0, 0 }, tiling{ til } {  // for use on flat planes
 
 }
 
