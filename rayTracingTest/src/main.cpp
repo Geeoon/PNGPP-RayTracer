@@ -19,8 +19,8 @@
 int main() {
 	const double maxDist = DBL_MAX;
 	const unsigned int maxReflects = 500;
-	unsigned int width{ 1920 };
-	unsigned int height{ 1080 };
+	unsigned int width{ 400 };
+	unsigned int height{ 400 };
 	double ratio{ static_cast<double>(width) / height };
 	Scene sceneRoom{ std::make_unique<Camera>(Vector3D{ 0, 8, -15 }, Vector3D{ 0, 0, 0 }, ratio) };
 	sceneRoom.addLight(std::make_unique<PointLight>(Vector3D{ 0.0, 19, 5.0 }, std::make_unique<Material>(Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, 50, 0), .1, 2.0));
@@ -50,14 +50,29 @@ int main() {
 
 	Scene refraction{ std::make_unique<Camera>(Vector3D{ 0, 2, 0 }, Vector3D{ 0, 0, 0 }, ratio) };
 	refraction.addLight(std::make_unique<Light>(Vector3D{ 0, 300, 0 }, std::make_unique<Material>(Vector3D{ 1, 1, 1 }, Vector3D{ 1, 1, 1 }, Vector3D{ 1, 1, 1 }), 1.0));
-	refraction.addObject(std::make_unique<Sphere>(1, Vector3D{ 0, 2, 3 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 0.0, 0.0, 1.0, 1.1)));
+	refraction.addObject(std::make_unique<Sphere>(1, Vector3D{ 0, 1.75, 3 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 0.0, 0.0, 1.0, 1.6)));
 	refraction.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.3, 0.3, 0.3 }, Vector3D{ 0.5, 0.5, 0.5 }, Vector3D{ 0, 0, 0 }, 0, 0.1, 3)));
+
+	Scene cornell{ std::make_unique<Camera>(Vector3D{ 0, 0, -10 }, Vector3D{ 0, 0, 0 }, ratio, 1.5) };
+	//cornell.addLight(std::make_unique<Light>(Vector3D{ 0, 300, 0 }, std::make_unique<Material>(Vector3D{ 1, 1, 1 }, Vector3D{ 1, 1, 1 }, Vector3D{ 1, 1, 1 }), 1.0));
+
+	cornell.addLight(std::make_unique<PointLight>(Vector3D{ 0, 4, 0 }, std::make_unique<Material>(Vector3D{ .95, .95, 1.0 }, Vector3D{ .95, .95, 1.0 }, Vector3D{ .95, .95, 1.0 }), .2, 1));
+	cornell.addObject(std::make_unique<Plane>(Vector3D{ -5, 0, 0 }, Vector3D{ 1, 0, 0 }, std::make_unique<Material>(Vector3D{ 0.0607 * 3, 0.02 * 3, 0.0251 * 3 }, Vector3D{ 0.0607 * 7, 0.02 * 7, 0.0251 * 7 }, Vector3D{ 0.0, 0.0, 0.0 }, 0, 0)));  // left wall
+	cornell.addObject(std::make_unique<Plane>(Vector3D{ 5, 0, 0 }, Vector3D{ -1, 0, 0 }, std::make_unique<Material>(Vector3D{ 0.0122 * 2.5, 0.0271 * 2.5, 0.0431 * 2.5 }, Vector3D{ 0.0122 * 7, 0.0271 * 7, 0.0431 * 7 }, Vector3D{ 0.0, 0.0, 0.0 }, 0, 0)));  // right wall
+	cornell.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 5 }, Vector3D{ 0, 0, -1 }, std::make_unique<Material>(Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.7, 0.7, 0.7 }, Vector3D{ 0.0, 0.0, 0.0 }, 0, 0)));  // back wall
+	cornell.addObject(std::make_unique<Plane>(Vector3D{ 0, 5, 0 }, Vector3D{ 0, -1, 0 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.0, 0.0, 0.0 }, 0, 0)));  // ceiling
+	cornell.addObject(std::make_unique<Plane>(Vector3D{ 0, -5, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Material>(Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.7, 0.7, 0.7 }, Vector3D{ 0.0, 0.0, 0.0 }, 0, 0)));  // floor
+	//cornell.addObject(std::make_unique<Sphere>(2, Vector3D{ 2, -3, -2 }, std::make_unique<Material>(Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.7, 0.7, 0.7 }, Vector3D{ 0.0, 0.0, 0.0 })));
+	//cornell.addObject(std::make_unique<Sphere>(2.5, Vector3D{ -1.5, -2.5, 2 }, std::make_unique<Material>(Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.7, 0.7, 0.7 }, Vector3D{ 0.0, 0.0, 0.0 })));
+	cornell.addObject(std::make_unique<Sphere>(2.0, Vector3D{ 2, -3, 0.0 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 0.0, 0.0, 1.0, 2.42)));
+	cornell.addObject(std::make_unique<Sphere>(2.0, Vector3D{ -2, -3, 2.5 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 100.0, 1.0)));
 
 	Renderer renderer{};
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, sceneRoom);
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, storm);
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, simple);
-	png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, refraction);
+	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, refraction);
+	png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, cornell);
 
 	image.write("output.png");
 	return 0;

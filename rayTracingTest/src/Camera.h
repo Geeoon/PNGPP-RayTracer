@@ -5,9 +5,10 @@
 class Camera {
 public:
 	Camera(Vector3D pos, Vector3D ori, double r);
+	Camera(Vector3D pos, Vector3D ori, double r, double z);
 	Vector3D position, orientation;
-private:
-	double ratio;
+	double ratio, zoom;
 	Vector4D screen;
+
 };
 

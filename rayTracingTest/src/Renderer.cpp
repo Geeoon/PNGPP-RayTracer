@@ -8,7 +8,7 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 	// https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
 	double dist = maxDist;
 	double ratio{ static_cast<double>(width) / height };
-	Vector4D screen{ -1, 1 / ratio, 1, -1 / ratio};
+	Vector4D screen = scene.getCamera()->screen;
 	image = png::image<png::rgb_pixel_16>{ width, height };
 
 	for (png::uint_32 py = 0; py < image.get_height(); py++) {
@@ -38,8 +38,8 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 					}
 
 					Vector3D normalVector = (*obj)->getNormal(intersection, ray);
-					Vector3D shiftedPoint{ intersection + normalVector * 1e-6 };  // shifted so it doesn't detect itself as between the light source
-					Vector3D lightVector = Vector3D::normalize(scene.getLights()[l]->position - shiftedPoint);
+					Vector3D shiftedPoint{ intersection + normalVector * 1e-12 };  // shifted so it doesn't detect the object as between the light source
+					Vector3D lightVector = Vector3D::normalize(scene.getLights()[l]->position - intersection);
 					Ray lightRay{ shiftedPoint, lightVector };
 
 					double distanceToBetweenObject{ maxDist };
@@ -50,16 +50,17 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 						// inherent color without need of light
 						//rgb = rgb + (*obj)->getMaterial()->getInherent();
 
+						rgb = BlinnPhong(obj, scene.getCamera(), lightVector, normalVector, intersection, scene.getLights()[l]);
 						// ambient
-						rgb = rgb + ((*obj)->getMaterial()->getAmbient(intersection).multiply(scene.getLights()[l]->getMaterial()->getAmbient() * scene.getLights()[l]->getIntensityAt(intersection)));
+						//rgb = rgb + ((*obj)->getMaterial()->getAmbient(intersection).multiply(scene.getLights()[l]->getMaterial()->getAmbient() * scene.getLights()[l]->getIntensityAt(intersection)));
 
 						// diffuse
-						rgb = rgb + ((*obj)->getMaterial()->getDiffuse(intersection).multiply(scene.getLights()[l]->getMaterial()->getDiffuse() * scene.getLights()[l]->getIntensityAt(intersection))) * (lightVector * normalVector);
+						//rgb = rgb + ((*obj)->getMaterial()->getDiffuse(intersection).multiply(scene.getLights()[l]->getMaterial()->getDiffuse() * scene.getLights()[l]->getIntensityAt(intersection))) * (lightVector * normalVector);
 
 						// specular
-						Vector3D cameraVector{ Vector3D::normalize(scene.getCamera()->position - intersection) };
-						Vector3D H{ Vector3D::normalize(lightVector + cameraVector) };
-						rgb = rgb + (*obj)->getMaterial()->getSpecular(intersection).multiply(scene.getLights()[l]->getMaterial()->getSpecular() * scene.getLights()[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getMaterial()->getShininess(intersection) / 4);
+						//Vector3D cameraVector{ Vector3D::normalize(scene.getCamera()->position - intersection) };
+						//Vector3D H{ Vector3D::normalize(lightVector + cameraVector) };
+						//rgb = rgb + (*obj)->getMaterial()->getSpecular(intersection).multiply(scene.getLights()[l]->getMaterial()->getSpecular() * scene.getLights()[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getMaterial()->getShininess(intersection) / 4);
 
 					} else {
 
@@ -85,7 +86,7 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 						}
 
 						//snells law
-						shiftedPoint = intersection - normalVector * 1e-6;  // go into the sphere itself
+						shiftedPoint = intersection - normalVector * 1e-12;  // go into the object itself
 						const double n1n2 = lastN / (*obj)->getMaterial()->getIndex();
 						Vector3D angleOfRefraction = ray.direction * (n1n2) + normalVector * ((n1n2) * (-ray.direction * normalVector) - sqrt(1 - pow(n1n2, 2) * (1 - pow(-ray.direction * normalVector, 2))));
 						
@@ -136,6 +137,21 @@ png::image<png::rgb_pixel_16>& Renderer::renderPathTracing(unsigned int maxRefle
 		}
 	}
 	return image;
+}
+
+Vector3D Renderer::BlinnPhong(std::unique_ptr<Object>* obj, std::unique_ptr<Camera>& cam, const Vector3D& lightVector, const Vector3D& normalVector, const Vector3D& intersection, std::unique_ptr<Light>& light) {
+	Vector3D rgb{ 0, 0, 0 };
+	// ambient
+	rgb = rgb + ((*obj)->getMaterial()->getAmbient(intersection).multiply(light->getMaterial()->getAmbient() * light->getIntensityAt(intersection)));
+
+	// diffuse
+	rgb = rgb + ((*obj)->getMaterial()->getDiffuse(intersection).multiply(light->getMaterial()->getDiffuse() * light->getIntensityAt(intersection))) * (lightVector * normalVector);
+
+	// specular
+	Vector3D cameraVector{ Vector3D::normalize(light->position - intersection) };
+	Vector3D H{ Vector3D::normalize(lightVector + cameraVector) };
+	rgb = rgb + (*obj)->getMaterial()->getSpecular(intersection).multiply(light->getMaterial()->getSpecular() * light->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getMaterial()->getShininess(intersection) / 4);
+	return rgb;
 }
 
 Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigned int maxReflects) {

@@ -19,6 +19,7 @@ public:
 	png::image<png::rgb_pixel_16>& renderPathTracing(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene, unsigned int samples);
 
 private:
+	Vector3D BlinnPhong(std::unique_ptr<Object>* obj, std::unique_ptr<Camera>& cam, const Vector3D& lightVector, const Vector3D& normalVector, const Vector3D& intersection, std::unique_ptr<Light>& light);
 	Vector3D tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigned int maxReflects);
 	const double maxDist;
 	std::mt19937_64 mt_engine;
