@@ -47,27 +47,11 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 					Vector3D rgb{ 0.0, 0.0, 0.0 };
 
 					if (Vector3D::magnitude(scene.getLights()[l]->position - shiftedPoint) < distanceToBetweenObject) {  // if no object is in the way
-						// inherent color without need of light
-						//rgb = rgb + (*obj)->getMaterial()->getInherent();
 
-						rgb = BlinnPhong(obj, scene.getCamera(), lightVector, normalVector, intersection, scene.getLights()[l]);
-						// ambient
-						//rgb = rgb + ((*obj)->getMaterial()->getAmbient(intersection).multiply(scene.getLights()[l]->getMaterial()->getAmbient() * scene.getLights()[l]->getIntensityAt(intersection)));
-
-						// diffuse
-						//rgb = rgb + ((*obj)->getMaterial()->getDiffuse(intersection).multiply(scene.getLights()[l]->getMaterial()->getDiffuse() * scene.getLights()[l]->getIntensityAt(intersection))) * (lightVector * normalVector);
-
-						// specular
-						//Vector3D cameraVector{ Vector3D::normalize(scene.getCamera()->position - intersection) };
-						//Vector3D H{ Vector3D::normalize(lightVector + cameraVector) };
-						//rgb = rgb + (*obj)->getMaterial()->getSpecular(intersection).multiply(scene.getLights()[l]->getMaterial()->getSpecular() * scene.getLights()[l]->getIntensityAt(intersection)) * pow((normalVector * H), (*obj)->getMaterial()->getShininess(intersection) / 4);
-
-					} else {
-
-						// inherent color without need of light
-						//rgb = rgb + (*obj)->getMaterial()->getInherent();
+						rgb = rgb + BlinnPhong(obj, scene.getCamera(), lightVector, normalVector, intersection, scene.getLights()[l]);
 						
 					}
+
 					// reflection / refraction
 					if ((*obj)->getMaterial()->getRefraction(intersection) < (*obj)->getMaterial()->getReflection(intersection)) {  // only doing one or the other for now
 						// reflections
@@ -77,24 +61,25 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 							break;
 						}
 						ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
-					} else {
-						// refractions
+					} else {  // refractinos
+						//snells law
+						shiftedPoint = intersection - normalVector * 1e-12;  // go into the object itself
+						const double n2{ (*obj)->getMaterial()->getIndex() };
+						const double n1n2{ lastN / n2 };
+						Vector3D angleOfRefraction{ ray.direction * (n1n2)+normalVector * ((n1n2) * (-ray.direction * normalVector) - sqrt(1 - pow(n1n2, 2) * (1 - pow(-ray.direction * normalVector, 2)))) };
+						
 						finalColor = finalColor + rgb * reflection;
-						reflection *= (*obj)->getMaterial()->getRefraction(intersection);
+
+						double schlick{ calculateSchlick(lastN, n2, normalVector, ray.direction) };
+						reflection *= (*obj)->getMaterial()->getRefraction(intersection) * (1 - schlick);
 						if (reflection == 0) {
 							break;
 						}
 
-						//snells law
-						shiftedPoint = intersection - normalVector * 1e-12;  // go into the object itself
-						const double n1n2 = lastN / (*obj)->getMaterial()->getIndex();
-						Vector3D angleOfRefraction = ray.direction * (n1n2) + normalVector * ((n1n2) * (-ray.direction * normalVector) - sqrt(1 - pow(n1n2, 2) * (1 - pow(-ray.direction * normalVector, 2))));
-						
-
 						ray = Ray{ shiftedPoint, angleOfRefraction };
 
 						if (!lastObj) {
-							lastN = (*obj)->getMaterial()->getIndex();
+							lastN = n2;
 							lastObj = obj;
 						} else {
 							lastN = 1;
@@ -186,4 +171,20 @@ Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigne
 	Vector3D incoming = tracePath(newRay, scene, depth + 1, maxReflects);
 
 	return emittance + (BRDF.multiply(incoming) * cos_theta / p);
+}
+
+double Renderer::calculateSchlick(double n1, double n2, const Vector3D& normal, const Vector3D& incident) {
+	double schlick{ 0.0 };
+	double r0{ (n1 - n2) / (n1 + n2) * (n1 - n2) / (n1 + n2) };
+	r0 *= r0;
+	double cosX = -(normal * incident);
+	if (n1 > n2) {
+		const double sinT2 = n1 * n1 * (1.0 - (incident * normal) * (incident * normal));
+		if (sinT2 > 1.0) {
+			schlick = 1.0;
+		}
+		cosX = sqrt(1.0 - sinT2);
+	}
+	const double x = 1.0 - cosX;
+	return r0 + (1.0 - r0) * x * x * x * x * x;
 }
