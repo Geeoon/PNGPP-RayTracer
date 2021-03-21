@@ -22,6 +22,7 @@ private:
 	Vector3D BlinnPhong(std::unique_ptr<Object>* obj, std::unique_ptr<Camera>& cam, const Vector3D& lightVector, const Vector3D& normalVector, const Vector3D& intersection, std::unique_ptr<Light>& light);
 	Vector3D tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigned int maxReflects);
 	double calculateSchlick(double n1, double n2, const Vector3D& normal, const Vector3D& incident);
+	Vector3D renderRay(Scene& scene, double maxReflects, const Ray& ray);
 	const double maxDist;
 	std::mt19937_64 mt_engine;
 	std::uniform_real_distribution<double> theta_d;

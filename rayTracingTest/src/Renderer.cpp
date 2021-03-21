@@ -18,79 +18,8 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 			double x{ (screen.x) + ((screen.z - screen.x) / image.get_width() * (static_cast<double>(px) + 0.5)) };  // spots on screen for ray to shoot through
 			Vector3D pixel{ x + scene.getCamera()->position.x, y + scene.getCamera()->position.y, scene.getCamera()->position.z + 1 };
 			Vector3D finalColor{ 0, 0, 0 };
-
-			for (size_t l = 0; l < scene.getLights().size(); l++) {
-				Ray ray{ scene.getCamera()->position, Vector3D::normalize(pixel - scene.getCamera()->position) };
-				double reflection = 1;
-				double lastN = 1;
-				std::unique_ptr<Object>* lastObj{ nullptr };
-				for (unsigned int i = 0; i < maxReflects; i++) {  // change to "while (true)" in order to reflect until nothing to reflect.
-					double dist{ maxDist };
-					std::unique_ptr<Object>* obj{ nullptr };
-					obj = Object::nearestObject(scene.getObjects(), dist, ray);  // nearest object in ray's path
-					if (!obj) {  // if it hits no objects
-						break;
-					}
-
-					Vector3D intersection{ ray.position + ray.direction * dist };  // point of intersection
-					if (i == 0 && l == 0) {
-						finalColor = finalColor + (*obj)->getMaterial()->getInherent();
-					}
-
-					Vector3D normalVector = (*obj)->getNormal(intersection, ray);
-					Vector3D shiftedPoint{ intersection + normalVector * 1e-12 };  // shifted so it doesn't detect the object as between the light source
-					Vector3D lightVector = Vector3D::normalize(scene.getLights()[l]->position - intersection);
-					Ray lightRay{ shiftedPoint, lightVector };
-
-					double distanceToBetweenObject{ maxDist };
-					Object::nearestObject(scene.getObjects(), distanceToBetweenObject, lightRay);
-					Vector3D rgb{ 0.0, 0.0, 0.0 };
-
-					if (Vector3D::magnitude(scene.getLights()[l]->position - shiftedPoint) < distanceToBetweenObject) {  // if no object is in the way
-
-						rgb = rgb + BlinnPhong(obj, scene.getCamera(), lightVector, normalVector, intersection, scene.getLights()[l]);
-						
-					}
-
-					// reflection / refraction
-					if ((*obj)->getMaterial()->getRefraction(intersection) < (*obj)->getMaterial()->getReflection(intersection)) {  // only doing one or the other for now
-						// reflections
-						finalColor = finalColor + rgb * reflection;
-						reflection *= (*obj)->getMaterial()->getReflection(intersection);
-						if (reflection == 0) {
-							break;
-						}
-						ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
-					} else {  // refractinos
-						//snells law
-						shiftedPoint = intersection - normalVector * 1e-12;  // go into the object itself
-						const double n2{ (*obj)->getMaterial()->getIndex() };
-						const double n1n2{ lastN / n2 };
-						Vector3D angleOfRefraction{ ray.direction * (n1n2)+normalVector * ((n1n2) * (-ray.direction * normalVector) - sqrt(1 - pow(n1n2, 2) * (1 - pow(-ray.direction * normalVector, 2)))) };
-						
-						finalColor = finalColor + rgb * reflection;
-
-						double schlick{ calculateSchlick(lastN, n2, normalVector, ray.direction) };
-						reflection *= (*obj)->getMaterial()->getRefraction(intersection) * (1 - schlick);
-						if (reflection == 0) {
-							break;
-						}
-
-						ray = Ray{ shiftedPoint, angleOfRefraction };
-
-						if (!lastObj) {
-							lastN = n2;
-							lastObj = obj;
-						} else {
-							lastN = 1;
-							lastObj = nullptr;
-						}
-
-						
-					}
-				}
-			}
-
+			Ray ray{ scene.getCamera()->position, Vector3D::normalize(pixel - scene.getCamera()->position) };
+			finalColor = renderRay(scene, maxReflects, ray);
 			finalColor = Vector3D::clip(finalColor, 0, 1);
 			finalColor = finalColor * 65535;
 			image[image.get_height() - (py + 1)][px] = png::rgb_pixel_16{ static_cast<png::uint_16>(finalColor.x), static_cast<png::uint_16>(finalColor.y), static_cast<png::uint_16>(finalColor.z) };
@@ -171,6 +100,89 @@ Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigne
 	Vector3D incoming = tracePath(newRay, scene, depth + 1, maxReflects);
 
 	return emittance + (BRDF.multiply(incoming) * cos_theta / p);
+}
+
+Vector3D Renderer::renderRay(Scene& scene, double maxReflects, const Ray& r) {
+	Vector3D finalColor{ 0, 0, 0 };
+	Ray ray = r;
+	for (size_t l = 0; l < scene.getLights().size(); l++) {
+		ray = r;
+		double reflection = 1;
+		double lastN = 1;
+		std::unique_ptr<Object>* lastObj{ nullptr };
+		for (unsigned int i = 0; i < maxReflects; i++) {  // change to "while (true)" in order to reflect until nothing to reflect.
+			double dist{ maxDist };
+			std::unique_ptr<Object>* obj{ nullptr };
+			obj = Object::nearestObject(scene.getObjects(), dist, ray);  // nearest object in ray's path
+			if (!obj) {  // if it hits no objects
+				break;
+			}
+
+			Vector3D intersection{ ray.position + ray.direction * dist };  // point of intersection
+			if (i == 0 && l == 0) {
+				finalColor = finalColor + (*obj)->getMaterial()->getInherent();
+			}
+
+			Vector3D normalVector = (*obj)->getNormal(intersection, ray);
+			Vector3D shiftedPoint{ intersection + normalVector * 1e-12 };  // shifted so it doesn't detect the object as between the light source
+			Vector3D lightVector = Vector3D::normalize(scene.getLights()[l]->position - intersection);
+			Ray lightRay{ shiftedPoint, lightVector };
+
+			double distanceToBetweenObject{ maxDist };
+			Object::nearestObject(scene.getObjects(), distanceToBetweenObject, lightRay);
+			Vector3D rgb{ 0.0, 0.0, 0.0 };
+
+			if (Vector3D::magnitude(scene.getLights()[l]->position - shiftedPoint) < distanceToBetweenObject) {  // if no object is in the way
+
+				rgb = rgb + BlinnPhong(obj, scene.getCamera(), lightVector, normalVector, intersection, scene.getLights()[l]);
+
+			}
+
+			// reflection / refraction
+			if ((*obj)->getMaterial()->getRefraction(intersection) < (*obj)->getMaterial()->getReflection(intersection)) {  // only doing one or the other for now
+				// reflections
+				finalColor = finalColor + rgb * reflection;
+				reflection *= (*obj)->getMaterial()->getReflection(intersection);
+				if (reflection == 0) {
+					break;
+				}
+				ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
+			} else {  // refractinos
+				//snells law
+				shiftedPoint = intersection - normalVector * 1e-12;  // go into the object itself
+				const double n2{ (*obj)->getMaterial()->getIndex() };
+				const double n1n2{ lastN / n2 };
+				Vector3D angleOfRefraction{ ray.direction * (n1n2)+normalVector * ((n1n2) * (-ray.direction * normalVector) - sqrt(1 - pow(n1n2, 2) * (1 - pow(-ray.direction * normalVector, 2)))) };
+
+				finalColor = finalColor + rgb * reflection;
+
+				double schlick{ calculateSchlick(lastN, n2, normalVector, ray.direction) };
+				reflection *= (*obj)->getMaterial()->getRefraction(intersection) * (1 - schlick);
+				if (reflection == 0) {
+					break;
+				}
+
+				ray = Ray{ shiftedPoint, angleOfRefraction };
+
+				if (!lastObj) {
+					if (schlick > 0) {
+						Ray reflectedRay = Ray{ intersection + normalVector * 1e-12, Object::reflected(ray.direction, normalVector) };
+						finalColor = finalColor + renderRay(scene, maxReflects, reflectedRay) * schlick;
+					}
+					lastN = n2;
+					lastObj = obj;
+				} else {
+					if (schlick > 0) {
+						Ray reflectedRay = Ray{ intersection - normalVector * 1e-12, Object::reflected(ray.direction, normalVector) };
+						finalColor = finalColor + renderRay(scene, maxReflects, reflectedRay) * schlick;
+					}
+					lastN = 1;
+					lastObj = nullptr;
+				}
+			}
+		}
+	}
+	return finalColor;
 }
 
 double Renderer::calculateSchlick(double n1, double n2, const Vector3D& normal, const Vector3D& incident) {
