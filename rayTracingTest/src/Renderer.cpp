@@ -5,7 +5,6 @@ Renderer::Renderer() : maxDist{ DBL_MAX }, mt_engine{ 1 }, theta_d{ 0.0, 2.0 }, 
 }
 
 png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene) {
-	// https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
 	double dist = maxDist;
 	double ratio{ static_cast<double>(width) / height };
 	Vector4D screen = scene.getCamera()->screen;
@@ -102,7 +101,19 @@ Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigne
 	return emittance + (BRDF.multiply(incoming) * cos_theta / p);
 }
 
+Vector3D Renderer::refract(double n1, double n2, const Vector3D& normal, const Vector3D& incident) {
+	const double n = n1 / n2;
+	const double cosI = -(normal * incident);
+	const double sinT2 = n * n * (1.0 - cosI * cosI);
+	if (sinT2 > 1.0) {
+		return Vector3D{ 0, 0, 0 };  // reflect
+	}
+	const double cosT = sqrt(1.0 - sinT2);
+	return incident * n + normal * (n * cosI - cosT);
+}
+
 Vector3D Renderer::renderRay(Scene& scene, double maxReflects, const Ray& r) {
+	// https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
 	Vector3D finalColor{ 0, 0, 0 };
 	Ray ray = r;
 	for (size_t l = 0; l < scene.getLights().size(); l++) {
@@ -152,32 +163,43 @@ Vector3D Renderer::renderRay(Scene& scene, double maxReflects, const Ray& r) {
 				shiftedPoint = intersection - normalVector * 1e-12;  // go into the object itself
 				const double n2{ (*obj)->getMaterial()->getIndex() };
 				const double n1n2{ lastN / n2 };
-				Vector3D angleOfRefraction{ ray.direction * (n1n2)+normalVector * ((n1n2) * (-ray.direction * normalVector) - sqrt(1 - pow(n1n2, 2) * (1 - pow(-ray.direction * normalVector, 2)))) };
 
-				finalColor = finalColor + rgb * reflection;
+				//Vector3D angleOfRefraction{ ray.direction * (n1n2)+normalVector * ((n1n2) * (-ray.direction * normalVector) - sqrt(1 - pow(n1n2, 2) * (1 - pow(-ray.direction * normalVector, 2)))) };
+				Vector3D angleOfRefraction{ refract(lastN, n2, normalVector, ray.direction) };
 
-				double schlick{ calculateSchlick(lastN, n2, normalVector, ray.direction) };
-				reflection *= (*obj)->getMaterial()->getRefraction(intersection) * (1 - schlick);
-				if (reflection == 0) {
-					break;
-				}
+				if (angleOfRefraction != Vector3D{ 0, 0, 0 }) {
+					finalColor = finalColor + rgb * reflection;
 
-				ray = Ray{ shiftedPoint, angleOfRefraction };
-
-				if (!lastObj) {
-					if (schlick > 0) {
-						Ray reflectedRay = Ray{ intersection + normalVector * 1e-12, Object::reflected(ray.direction, normalVector) };
-						finalColor = finalColor + renderRay(scene, maxReflects, reflectedRay) * schlick;
+					double reflectance{ reflectanceFresnel(lastN, n2, normalVector, ray.direction) };
+					reflection *= (*obj)->getMaterial()->getRefraction(intersection) * (1 - reflectance);
+					if (reflection == 0) {
+						break;
 					}
-					lastN = n2;
-					lastObj = obj;
+
+					ray = Ray{ shiftedPoint, angleOfRefraction };
+
+					if (!lastObj) {
+						if (reflectance > 0) {
+							Ray reflectedRay = Ray{ intersection + normalVector * 1e-12, Object::reflected(ray.direction, normalVector) };
+							finalColor = finalColor + renderRay(scene, maxReflects, reflectedRay) * reflectance;
+						}
+						lastN = n2;
+						lastObj = obj;
+					} else {
+						if (reflectance > 0) {
+							Ray reflectedRay = Ray{ intersection - normalVector * 1e-12, Object::reflected(ray.direction, normalVector) };
+							finalColor = finalColor + renderRay(scene, maxReflects, reflectedRay) * reflectance;
+						}
+						lastN = 1;
+						lastObj = nullptr;
+					}
 				} else {
-					if (schlick > 0) {
-						Ray reflectedRay = Ray{ intersection - normalVector * 1e-12, Object::reflected(ray.direction, normalVector) };
-						finalColor = finalColor + renderRay(scene, maxReflects, reflectedRay) * schlick;
+					finalColor = finalColor + rgb * reflection;
+					reflection *= (*obj)->getMaterial()->getReflection(intersection);
+					if (reflection == 0) {
+						break;
 					}
-					lastN = 1;
-					lastObj = nullptr;
+					ray = Ray{ shiftedPoint, Object::reflected(ray.direction, normalVector) };
 				}
 			}
 		}
@@ -185,15 +207,28 @@ Vector3D Renderer::renderRay(Scene& scene, double maxReflects, const Ray& r) {
 	return finalColor;
 }
 
+double Renderer::reflectanceFresnel(double n1, double n2, const Vector3D& normal, const Vector3D& incident) {
+	const double n = n1 / n2;
+	const double cosI = -(normal * incident);
+	const double sinT2 = n * n * (1.0 - cosI * cosI);
+	if (sinT2 > 1.0) {
+		return 1.0;
+	}
+	const double cosT = sqrt(1.0 - sinT2);
+	const double r0rth = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
+	const double rPar = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
+	return (r0rth * r0rth + rPar * rPar) / 2.0;
+}
+
 double Renderer::calculateSchlick(double n1, double n2, const Vector3D& normal, const Vector3D& incident) {
-	double schlick{ 0.0 };
 	double r0{ (n1 - n2) / (n1 + n2) * (n1 - n2) / (n1 + n2) };
 	r0 *= r0;
 	double cosX = -(normal * incident);
 	if (n1 > n2) {
-		const double sinT2 = n1 * n1 * (1.0 - (incident * normal) * (incident * normal));
+		const double n = n1 / n2;
+		const double sinT2 = n * n * (1.0 - (cosX) * (cosX));
 		if (sinT2 > 1.0) {
-			schlick = 1.0;
+			return 1.0;
 		}
 		cosX = sqrt(1.0 - sinT2);
 	}

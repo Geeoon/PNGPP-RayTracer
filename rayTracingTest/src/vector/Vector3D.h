@@ -85,6 +85,13 @@ public:
 		return x * other.x + y * other.y + z * other.z;
 	}
 
+	bool operator==(Vector3D const& rhs) const {
+		return (x == rhs.x && y == rhs.y && z == rhs.z);
+	}
+
+	bool operator!=(Vector3D const& rhs) const {
+		return !(x == rhs.x && y == rhs.y && z == rhs.z);
+	}
 
 	double x, y, z;
 };

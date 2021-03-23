@@ -12,5 +12,6 @@ PointLight::PointLight(Vector3D pos, std::unique_ptr<Material> mat, double dropO
 }
 
 double PointLight::getIntensityAt(const Vector3D& point) {
-	return intensity / (Vector3D::magnitude(position - point) * dropOffValue);
+	double dist = (Vector3D::magnitude(position - point));
+	return intensity / (dist * dist) * dropOffValue;
 }
