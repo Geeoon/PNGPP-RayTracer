@@ -19,8 +19,8 @@
 int main() {
 	const double maxDist = DBL_MAX;
 	const unsigned int maxReflects = 500;
-	unsigned int width{ 1000 };
-	unsigned int height{ 1000 };
+	unsigned int width{ 50 };
+	unsigned int height{ 50 };
 	double ratio{ static_cast<double>(width) / height };
 	Scene sceneRoom{ std::make_unique<Camera>(Vector3D{ 0, 8, -15 }, Vector3D{ 0, 0, 0 }, ratio) };
 	sceneRoom.addLight(std::make_unique<PointLight>(Vector3D{ 0.0, 19, 5.0 }, std::make_unique<Material>(Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, 50, 0), 1, 400.0));
@@ -67,15 +67,18 @@ int main() {
 	cornell.addObject(std::make_unique<Sphere>(2.0, Vector3D{ 3, -3, 0.0 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 0.0, 0.0, 1.0, 1.52)));
 	cornell.addObject(std::make_unique<Sphere>(2.0, Vector3D{ -3, -3, 2.5 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 100.0, 1.0)));
 
-	//Scene pathTracing{ std::make_unique<Camera>(Vector3D{ 0, 4, 0 }, Vector3D{ 0, 0, 0 }, ratio, 1.0) };
-	
+	Scene pathTracing{ std::make_unique<Camera>(Vector3D{ 0, 2, 0 }, Vector3D{ 0, 0, 0 }, ratio, 1.0) };
+	pathTracing.addObject(std::make_unique<Sphere>(2, Vector3D{ 0, 2, 5 }, std::make_unique<Material>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, Vector3D{ 1, 1, 1 })));
+	pathTracing.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 1, 1, 1 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, 0.0, 0.0, 3)));
+
 	Renderer renderer{};
 
-	png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, sceneRoom);
+	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, sceneRoom);
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, storm);
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, simple);
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, refraction);
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, cornell);
+	png::image<png::rgb_pixel_16>& image = renderer.renderPathTracing(10, width, height, pathTracing, 100);
 
 	image.write("output.png");
 	return 0;
