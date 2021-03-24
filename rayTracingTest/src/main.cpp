@@ -19,8 +19,8 @@
 int main() {
 	const double maxDist = DBL_MAX;
 	const unsigned int maxReflects = 500;
-	unsigned int width{ 50 };
-	unsigned int height{ 50 };
+	unsigned int width{ 200 };
+	unsigned int height{ 200 };
 	double ratio{ static_cast<double>(width) / height };
 	Scene sceneRoom{ std::make_unique<Camera>(Vector3D{ 0, 8, -15 }, Vector3D{ 0, 0, 0 }, ratio) };
 	sceneRoom.addLight(std::make_unique<PointLight>(Vector3D{ 0.0, 19, 5.0 }, std::make_unique<Material>(Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, 50, 0), 1, 400.0));
@@ -68,8 +68,10 @@ int main() {
 	cornell.addObject(std::make_unique<Sphere>(2.0, Vector3D{ -3, -3, 2.5 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 100.0, 1.0)));
 
 	Scene pathTracing{ std::make_unique<Camera>(Vector3D{ 0, 2, 0 }, Vector3D{ 0, 0, 0 }, ratio, 1.0) };
-	pathTracing.addObject(std::make_unique<Sphere>(2, Vector3D{ 0, 2, 5 }, std::make_unique<Material>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, Vector3D{ 1, 1, 1 })));
-	pathTracing.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 1, 1, 1 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, 0.0, 0.0, 3)));
+	//pathTracing.addObject(std::make_unique<Sphere>(2, Vector3D{ 0, 2, 5 }, std::make_unique<Material>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, Vector3D{ 1, 1, 1 })));  // glowing object
+	pathTracing.addObject(std::make_unique<Sphere>(2, Vector3D{ 0, 2, 5 }, std::make_unique<Material>(Vector3D{ 0.5, 0.5, 0.5 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 })));  // sphere
+	pathTracing.addObject(std::make_unique<Plane>(Vector3D{ 0, 1000, 0 }, Vector3D{ 0, -1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0.18, 0.27, 0.36 }, 0.0, 0.0, 3)));  // sky
+	pathTracing.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.9, 0.9, 0.9 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, 0.0, 0.0, 3)));  // floor
 
 	Renderer renderer{};
 
@@ -78,7 +80,7 @@ int main() {
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, simple);
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, refraction);
 	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, cornell);
-	png::image<png::rgb_pixel_16>& image = renderer.renderPathTracing(10, width, height, pathTracing, 100);
+	png::image<png::rgb_pixel_16>& image = renderer.renderPathTracing(3, width, height, pathTracing, 100);
 
 	image.write("output.png");
 	return 0;
