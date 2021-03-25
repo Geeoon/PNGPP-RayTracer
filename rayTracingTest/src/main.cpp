@@ -69,7 +69,7 @@ int main() {
 
 	Scene pathTracing{ std::make_unique<Camera>(Vector3D{ 0, 2, 0 }, Vector3D{ 0, 0, 0 }, ratio, 1.0) };
 	//pathTracing.addObject(std::make_unique<Sphere>(2, Vector3D{ 0, 2, 5 }, std::make_unique<Material>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, Vector3D{ 1, 1, 1 })));  // glowing object
-	pathTracing.addObject(std::make_unique<Sphere>(2, Vector3D{ 0, 2, 5 }, std::make_unique<Material>(Vector3D{ 0.5, 0.5, 0.5 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 })));  // sphere
+	pathTracing.addObject(std::make_unique<Sphere>(2, Vector3D{ 0, 2.5, 5 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, 0.0, 0.25)));  // sphere
 	pathTracing.addObject(std::make_unique<Plane>(Vector3D{ 0, 1000, 0 }, Vector3D{ 0, -1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0.18, 0.27, 0.36 }, 0.0, 0.0, 3)));  // sky
 	pathTracing.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.9, 0.9, 0.9 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, 0.0, 0.0, 3)));  // floor
 

@@ -75,6 +75,7 @@ Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigne
 		return Vector3D{ 0, 0, 0 };
 	}
 
+	Vector3D output{ 0, 0, 0 };
 	double dist{ maxDist };
 	std::unique_ptr<Object>* obj{ nullptr };
 	obj = Object::nearestObject(scene.getObjects(), dist, ray);  // nearest object in ray's path
@@ -82,14 +83,28 @@ Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigne
 		return Vector3D{ 0, 0, 0 };
 	}
 	Vector3D intersection{ ray.position + ray.direction * dist };  // point of intersection
-	double theta = theta_d(mt_engine);
-	double z = z_d(mt_engine);
-	double rad = sqrt(1 - z * z);
-	Vector3D randomDir{ rad * cos(theta * M_PI), rad * sin(theta * M_PI), z };
-	Ray ray2{ intersection + (*obj)->getNormal(intersection, ray) * 1e-12, randomDir };  // make the direction random
+	Vector3D normal{ (*obj)->getNormal(intersection, ray) };
+	Vector3D shiftedPoint{ intersection + normal * 1e-12 };
+	Vector3D direction{ 0, 1, 0 };
+	const double theta{ theta_d(mt_engine) };
+	const double z{ z_d(mt_engine) };
+	const double rad{ sqrt(1 - z * z) };
+	const double reflectance{ (*obj)->getMaterial()->getReflection(intersection) };  // used to determine how much of a reflected image should be on top of the object; basically a glossy finish on top
+	const double shininess{ (*obj)->getMaterial()->getShininess(intersection) };  // used to determine how much the light is reflected by (0 = random direction; perfectly diffuse, 1 = mirror; perfectly reflective);
 
+	if (reflectance > 0) {
+		Vector3D reflectionDirection{ Object::reflected(ray.direction, normal) };
+		Ray reflected{ shiftedPoint, reflectionDirection };
+		output = output + tracePath(reflected, scene, depth + 1, maxReflects) * reflectance;
+	}
+
+	direction = Vector3D{ rad * cos(theta * M_PI), rad * sin(theta * M_PI), z };  // make the direction random
+
+	Ray outgoingRay{ shiftedPoint, direction };  
+	
 	// ambient is color and specular is emmitance
-	return (*obj)->getMaterial()->getSpecular(intersection) + tracePath(ray2, scene, depth + 1, maxReflects).multiply((*obj)->getMaterial()->getAmbient(intersection));
+	output = output + (*obj)->getMaterial()->getSpecular(intersection) + tracePath(outgoingRay, scene, depth + 1, maxReflects).multiply((*obj)->getMaterial()->getAmbient(intersection));
+	return output;
 }
 
 Vector3D Renderer::refract(double n1, double n2, const Vector3D& normal, const Vector3D& incident) {
