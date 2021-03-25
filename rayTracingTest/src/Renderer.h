@@ -23,12 +23,14 @@ private:
 	Vector3D tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigned int maxReflects);
 	Vector3D refract(double n1, double n2, const Vector3D& normal, const Vector3D& incident);
 	Vector3D renderRay(Scene& scene, double maxReflects, const Ray& ray);
+	Vector3D randomUnitVector3D();
 	double reflectanceFresnel(double n1, double n2, const Vector3D& normal, const Vector3D& incident);
 	double calculateSchlick(double n1, double n2, const Vector3D& normal, const Vector3D& incident);	
 	const double maxDist;
 	std::mt19937_64 mt_engine;
 	std::uniform_real_distribution<double> theta_d;
 	std::uniform_real_distribution<double> z_d;
+	std::uniform_real_distribution<double> u_d;
 	png::image<png::rgb_pixel_16> image;
 };
 

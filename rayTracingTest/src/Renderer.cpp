@@ -1,6 +1,6 @@
 #include "Renderer.h"
 
-Renderer::Renderer() : maxDist{ DBL_MAX }, mt_engine{ 1 }, theta_d{ 0.0, 2.0 }, z_d{ -1.0, 1.0 } {
+Renderer::Renderer() : maxDist{ DBL_MAX }, mt_engine{ 1 }, theta_d{ 0.0, 2.0 }, z_d{ -1.0, 1.0 }, u_d{ 0.0, 1.0 } {
 
 }
 
@@ -86,11 +86,16 @@ Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigne
 	Vector3D normal{ (*obj)->getNormal(intersection, ray) };
 	Vector3D shiftedPoint{ intersection + normal * 1e-12 };
 	Vector3D direction{ 0, 1, 0 };
-	const double theta{ theta_d(mt_engine) };
-	const double z{ z_d(mt_engine) };
-	const double rad{ sqrt(1 - z * z) };
-	const double reflectance{ (*obj)->getMaterial()->getReflection(intersection) };  // used to determine how much of a reflected image should be on top of the object; basically a glossy finish on top
+	
+	double reflectance{ (*obj)->getMaterial()->getReflection(intersection) };  // used to determine how much of a reflected image should be on top of the object; basically a glossy finish on top
+	double refractance{ (*obj)->getMaterial()->getRefraction(intersection) };
 	const double shininess{ (*obj)->getMaterial()->getShininess(intersection) };  // used to determine how much the light is reflected by (0 = random direction; perfectly diffuse, 1 = mirror; perfectly reflective);
+	const double indexOfRefraction{ (*obj)->getMaterial()->getIndex(intersection) };
+
+	if (refractance > 0) {
+		reflectance = reflectanceFresnel(1.0, indexOfRefraction, normal, ray.direction);
+		refractance = 1 - reflectance;
+	}
 
 	if (reflectance > 0) {
 		Vector3D reflectionDirection{ Object::reflected(ray.direction, normal) };
@@ -98,7 +103,11 @@ Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigne
 		output = output + tracePath(reflected, scene, depth + 1, maxReflects) * reflectance;
 	}
 
-	direction = Vector3D{ rad * cos(theta * M_PI), rad * sin(theta * M_PI), z };  // make the direction random
+	//const double theta{ theta_d(mt_engine) };
+	//const double z{ z_d(mt_engine) };
+	//const double rad{ sqrt(1 - z * z) };
+	//direction = Vector3D{ rad * cos(theta * M_PI), rad * sin(theta * M_PI), z };  // make the direction random (these lines are computationally less expensive, but are more biased);
+	direction = randomUnitVector3D();  // computationally expensive but there is no bias.
 
 	Ray outgoingRay{ shiftedPoint, direction };  
 	
@@ -213,6 +222,14 @@ Vector3D Renderer::renderRay(Scene& scene, double maxReflects, const Ray& r) {
 	return finalColor;
 }
 
+Vector3D Renderer::randomUnitVector3D() {  // computationally expensive
+	const double phi{ theta_d(mt_engine) * M_PI };
+	const double costheta{ z_d(mt_engine) };
+	const double u{ u_d(mt_engine) };
+	const double theta{ acos(costheta) };
+	const double r{ std::cbrt(u) };
+	return Vector3D{ r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta) };
+}
 double Renderer::reflectanceFresnel(double n1, double n2, const Vector3D& normal, const Vector3D& incident) {
 	const double n = n1 / n2;
 	const double cosI = -(normal * incident);
