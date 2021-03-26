@@ -43,7 +43,7 @@ png::image<png::rgb_pixel_16>& Renderer::renderPathTracing(unsigned int maxRefle
 			
 
 			for (unsigned int i = 0; i < samples; i++) {
-				finalColor = finalColor + tracePath(ray, scene, 0, maxReflects);
+				finalColor = finalColor + tracePath(ray, scene, 1.0, 0, maxReflects, samples);
 			}
 			
 			finalColor = finalColor / samples;
@@ -70,7 +70,7 @@ Vector3D Renderer::BlinnPhong(std::unique_ptr<Object>* obj, std::unique_ptr<Came
 	return rgb;
 }
 
-Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigned int maxReflects) {
+Vector3D Renderer::tracePath(Ray& ray, Scene& scene, double index, unsigned int depth, unsigned int maxReflects, unsigned int samples) {
 	if (depth >= maxReflects) {
 		return Vector3D{ 0, 0, 0 };
 	}
@@ -93,14 +93,23 @@ Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigne
 	const double indexOfRefraction{ (*obj)->getMaterial()->getIndex(intersection) };
 
 	if (refractance > 0) {
-		reflectance = reflectanceFresnel(1.0, indexOfRefraction, normal, ray.direction);
+		reflectance = reflectanceFresnel(index, indexOfRefraction, normal, ray.direction);
 		refractance = 1 - reflectance;
+		if (index != 1.0) {
+			Vector3D shiftedPointRef{ intersection + normal * 1e-12 };
+			Ray refracted{ shiftedPointRef, refract(index, 1.0, normal, ray.direction) };
+			output = output + tracePath(refracted, scene, 1.0, depth, maxReflects, samples);
+		} else {
+			Vector3D shiftedPointRef{ intersection - normal * 1e-12 };
+			Ray refracted{ shiftedPointRef, refract(index, indexOfRefraction, normal, ray.direction) };
+			output = output + tracePath(refracted, scene, indexOfRefraction, depth, maxReflects, samples);
+		}
 	}
 
 	if (reflectance > 0) {
 		Vector3D reflectionDirection{ Object::reflected(ray.direction, normal) };
 		Ray reflected{ shiftedPoint, reflectionDirection };
-		output = output + tracePath(reflected, scene, depth + 1, maxReflects) * reflectance;
+		output = output + tracePath(reflected, scene, 1.0, depth + 1, maxReflects, samples) * reflectance;
 	}
 
 	//const double theta{ theta_d(mt_engine) };
@@ -112,7 +121,7 @@ Vector3D Renderer::tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigne
 	Ray outgoingRay{ shiftedPoint, direction };  
 	
 	// ambient is color and specular is emmitance
-	output = output + (*obj)->getMaterial()->getSpecular(intersection) + tracePath(outgoingRay, scene, depth + 1, maxReflects).multiply((*obj)->getMaterial()->getAmbient(intersection));
+	output = output + (*obj)->getMaterial()->getSpecular(intersection) + tracePath(outgoingRay, scene, index, depth + 1, maxReflects, samples).multiply((*obj)->getMaterial()->getAmbient(intersection));
 	return output;
 }
 

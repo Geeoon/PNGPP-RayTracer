@@ -20,7 +20,7 @@ public:
 
 private:
 	Vector3D BlinnPhong(std::unique_ptr<Object>* obj, std::unique_ptr<Camera>& cam, const Vector3D& lightVector, const Vector3D& normalVector, const Vector3D& intersection, std::unique_ptr<Light>& light);
-	Vector3D tracePath(Ray& ray, Scene& scene, unsigned int depth, unsigned int maxReflects);
+	Vector3D tracePath(Ray& ray, Scene& scene, double index, unsigned int depth, unsigned int maxReflects, unsigned int samples);
 	Vector3D refract(double n1, double n2, const Vector3D& normal, const Vector3D& incident);
 	Vector3D renderRay(Scene& scene, double maxReflects, const Ray& ray);
 	Vector3D randomUnitVector3D();
