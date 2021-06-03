@@ -9,18 +9,6 @@ png::image<png::rgb_pixel_16>& Renderer::renderMultithread(unsigned int maxRefle
 	auto ratio{ static_cast<double>(width) / height };
 	auto screen = scene.getCamera()->screen;
 	image = png::image<png::rgb_pixel_16>{ width, height };
-	std::vector<int> outputImageRGB;
-	outputImageRGB.resize(100);
-	concurrency::array_view<int, 2> outputRGB{ static_cast<int>(image.get_height()), static_cast<int>(image.get_width()), outputImageRGB };
-	std::array<const double, 3> posArray{ { scene.getCamera()->position.x, scene.getCamera()->position.y, scene.getCamera()->position.z } };
-	concurrency::array_view<const double, 1> cameraPos{ 3, posArray };
-	Scene* scene2 = &scene;
-	concurrency::parallel_for_each(outputRGB.extent,
-		[&](concurrency::index<2> idx) restrict(amp) {
-		int y = idx[0];
-		int x = idx[1];
-
-	});
 
 	for (png::uint_32 py = 0; py < image.get_height(); py++) {
 		auto y{ (screen.w) + ((screen.y - screen.w) / image.get_height() * (static_cast<double>(py) + 0.5)) };  // spots on screen for ray to shoot through
