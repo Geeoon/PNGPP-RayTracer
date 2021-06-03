@@ -3,6 +3,8 @@
 
 struct Vector3D {
 public:
+	Vector3D();
+	
 	Vector3D(double x1, double y1, double z1);
 
 	static Vector3D clip(const Vector3D& vector, double min, double max) {

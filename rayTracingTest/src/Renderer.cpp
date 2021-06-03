@@ -4,17 +4,49 @@ Renderer::Renderer() : maxDist{ DBL_MAX }, mt_engine{ 1 }, theta_d{ 0.0, 2.0 }, 
 
 }
 
-png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene) {
-	double dist = maxDist;
-	double ratio{ static_cast<double>(width) / height };
-	Vector4D screen = scene.getCamera()->screen;
+png::image<png::rgb_pixel_16>& Renderer::renderMultithread(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene) {
+	auto dist = maxDist;
+	auto ratio{ static_cast<double>(width) / height };
+	auto screen = scene.getCamera()->screen;
 	image = png::image<png::rgb_pixel_16>{ width, height };
+	std::vector<int> outputImageRGB;
+	outputImageRGB.resize(100);
+	concurrency::array_view<int, 2> outputRGB{ static_cast<int>(image.get_height()), static_cast<int>(image.get_width()), outputImageRGB };
+	std::array<const double, 3> posArray{ { scene.getCamera()->position.x, scene.getCamera()->position.y, scene.getCamera()->position.z } };
+	concurrency::array_view<const double, 1> cameraPos{ 3, posArray };
+	Scene* scene2 = &scene;
+	concurrency::parallel_for_each(outputRGB.extent,
+		[&](concurrency::index<2> idx) restrict(amp) {
+		int y = idx[0];
+		int x = idx[1];
+
+	});
 
 	for (png::uint_32 py = 0; py < image.get_height(); py++) {
-		//std::cout << "Progress: " << static_cast<int>(static_cast<double>(py) / image.get_height() * 100) << "%" << std::endl;
-		double y{ (screen.w) + ((screen.y - screen.w) / image.get_height() * (static_cast<double>(py) + 0.5)) };  // spots on screen for ray to shoot through
+		auto y{ (screen.w) + ((screen.y - screen.w) / image.get_height() * (static_cast<double>(py) + 0.5)) };  // spots on screen for ray to shoot through
 		for (png::uint_32 px = 0; px < image.get_width(); px++) {
-			double x{ (screen.x) + ((screen.z - screen.x) / image.get_width() * (static_cast<double>(px) + 0.5)) };  // spots on screen for ray to shoot through
+			auto x{ (screen.x) + ((screen.z - screen.x) / image.get_width() * (static_cast<double>(px) + 0.5)) };  // spots on screen for ray to shoot through
+			Vector3D pixel{ x + scene.getCamera()->position.x, y + scene.getCamera()->position.y, scene.getCamera()->position.z + 1 };
+			Vector3D finalColor{ 0, 0, 0 };
+			Ray ray{ scene.getCamera()->position, Vector3D::normalize(pixel - scene.getCamera()->position) };
+			finalColor = renderRay(scene, maxReflects, ray);
+			finalColor = Vector3D::clip(finalColor, 0, 1);
+			finalColor = finalColor * 65535;
+			image[image.get_height() - (py + 1)][px] = png::rgb_pixel_16{ static_cast<png::uint_16>(finalColor.x), static_cast<png::uint_16>(finalColor.y), static_cast<png::uint_16>(finalColor.z) };
+		}
+	}
+	return image;
+}
+
+png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene) {
+	auto dist = maxDist;
+	auto ratio{ static_cast<double>(width) / height };
+	auto screen = scene.getCamera()->screen;
+	image = png::image<png::rgb_pixel_16>{ width, height };
+	for (png::uint_32 py = 0; py < image.get_height(); py++) {
+		auto y{ (screen.w) + ((screen.y - screen.w) / image.get_height() * (static_cast<double>(py) + 0.5)) };  // spots on screen for ray to shoot through
+		for (png::uint_32 px = 0; px < image.get_width(); px++) {
+			auto x{ (screen.x) + ((screen.z - screen.x) / image.get_width() * (static_cast<double>(px) + 0.5)) };  // spots on screen for ray to shoot through
 			Vector3D pixel{ x + scene.getCamera()->position.x, y + scene.getCamera()->position.y, scene.getCamera()->position.z + 1 };
 			Vector3D finalColor{ 0, 0, 0 };
 			Ray ray{ scene.getCamera()->position, Vector3D::normalize(pixel - scene.getCamera()->position) };
@@ -28,7 +60,6 @@ png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsign
 }
 
 png::image<png::rgb_pixel_16>& Renderer::renderPathTracing(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene, unsigned int samples) {
-	
 	double ratio{ static_cast<double>(width) / height };
 	Vector4D screen{ -1, 1 / ratio, 1, -1 / ratio };
 	image = png::image<png::rgb_pixel_16>{ width, height };
@@ -36,20 +67,22 @@ png::image<png::rgb_pixel_16>& Renderer::renderPathTracing(unsigned int maxRefle
 	for (png::uint_32 py = 0; py < image.get_height(); py++) {
 		double y{ (screen.w) + ((screen.y - screen.w) / image.get_height() * (static_cast<double>(py) + 0.5)) };  // spots on screen for ray to shoot through
 		for (png::uint_32 px = 0; px < image.get_width(); px++) {
+
 			double x{ (screen.x) + ((screen.z - screen.x) / image.get_width() * (static_cast<double>(px) + 0.5)) };  // spots on screen for ray to shoot through
 			Vector3D pixel{ x + scene.getCamera()->position.x, y + scene.getCamera()->position.y, scene.getCamera()->position.z + 1 };
 			Vector3D finalColor{ 0, 0, 0 };
 			Ray ray{ scene.getCamera()->position, Vector3D::normalize(pixel - scene.getCamera()->position) };
-			
 
 			for (unsigned int i = 0; i < samples; i++) {
-				finalColor = finalColor + tracePath(ray, scene, 1.0, 0, maxReflects, samples);
+				finalColor = finalColor + tracePath(ray, scene, 1.0, 0, maxReflects);
 			}
 			
 			finalColor = finalColor / samples;
+			
 			finalColor = Vector3D::clip(finalColor, 0, 1);
 			finalColor = finalColor * 65535;
 			image[image.get_height() - (py + 1)][px] = png::rgb_pixel_16{ static_cast<png::uint_16>(finalColor.x), static_cast<png::uint_16>(finalColor.y), static_cast<png::uint_16>(finalColor.z) };
+
 		}
 	}
 	return image;
@@ -70,7 +103,7 @@ Vector3D Renderer::BlinnPhong(std::unique_ptr<Object>* obj, std::unique_ptr<Came
 	return rgb;
 }
 
-Vector3D Renderer::tracePath(Ray& ray, Scene& scene, double index, unsigned int depth, unsigned int maxReflects, unsigned int samples) {
+Vector3D Renderer::tracePath(Ray& ray, Scene& scene, double index, unsigned int depth, unsigned int maxReflects) {
 	if (depth >= maxReflects) {
 		return Vector3D{ 0, 0, 0 };
 	}
@@ -89,7 +122,7 @@ Vector3D Renderer::tracePath(Ray& ray, Scene& scene, double index, unsigned int 
 	
 	double reflectance{ (*obj)->getMaterial()->getReflection(intersection) };  // used to determine how much of a reflected image should be on top of the object; basically a glossy finish on top
 	double refractance{ (*obj)->getMaterial()->getRefraction(intersection) };
-	const double shininess{ (*obj)->getMaterial()->getShininess(intersection) };  // used to determine how much the light is reflected by (0 = random direction; perfectly diffuse, 1 = mirror; perfectly reflective);
+	const double shininess{ (*obj)->getMaterial()->getShininess(intersection) };  // used to determine how much of the light is reflected (0 = random direction, perfectly diffuse; 1 = reflection, perfectly reflective)
 	const double indexOfRefraction{ (*obj)->getMaterial()->getIndex(intersection) };
 
 	if (refractance > 0) {
@@ -98,30 +131,26 @@ Vector3D Renderer::tracePath(Ray& ray, Scene& scene, double index, unsigned int 
 		if (index != 1.0) {
 			Vector3D shiftedPointRef{ intersection + normal * 1e-12 };
 			Ray refracted{ shiftedPointRef, refract(index, 1.0, normal, ray.direction) };
-			output = output + tracePath(refracted, scene, 1.0, depth, maxReflects, samples);
+			output = output + tracePath(refracted, scene, 1.0, depth, maxReflects);
 		} else {
 			Vector3D shiftedPointRef{ intersection - normal * 1e-12 };
 			Ray refracted{ shiftedPointRef, refract(index, indexOfRefraction, normal, ray.direction) };
-			output = output + tracePath(refracted, scene, indexOfRefraction, depth, maxReflects, samples);
+			output = output + tracePath(refracted, scene, indexOfRefraction, depth, maxReflects);
 		}
 	}
 
 	if (reflectance > 0) {
 		Vector3D reflectionDirection{ Object::reflected(ray.direction, normal) };
 		Ray reflected{ shiftedPoint, reflectionDirection };
-		output = output + tracePath(reflected, scene, 1.0, depth + 1, maxReflects, samples) * reflectance;
+		output = output + tracePath(reflected, scene, 1.0, depth + 1, maxReflects) * reflectance;
 	}
 
-	//const double theta{ theta_d(mt_engine) };
-	//const double z{ z_d(mt_engine) };
-	//const double rad{ sqrt(1 - z * z) };
-	//direction = Vector3D{ rad * cos(theta * M_PI), rad * sin(theta * M_PI), z };  // make the direction random (these lines are computationally less expensive, but are more biased);
 	direction = randomUnitVector3D();  // computationally expensive but there is no bias.
 
 	Ray outgoingRay{ shiftedPoint, direction };  
 	
 	// ambient is color and specular is emmitance
-	output = output + (*obj)->getMaterial()->getSpecular(intersection) + tracePath(outgoingRay, scene, index, depth + 1, maxReflects, samples).multiply((*obj)->getMaterial()->getAmbient(intersection));
+	output = output + (*obj)->getMaterial()->getSpecular(intersection) + tracePath(outgoingRay, scene, index, depth + 1, maxReflects).multiply((*obj)->getMaterial()->getAmbient(intersection));
 	return output;
 }
 
@@ -229,6 +258,10 @@ Vector3D Renderer::renderRay(Scene& scene, double maxReflects, const Ray& r) {
 		}
 	}
 	return finalColor;
+}
+
+void Renderer::renderRay(Scene& scene, double maxReflects, const Ray& r, Vector3D* output) {
+	*output = renderRay(scene, maxReflects, r);
 }
 
 Vector3D Renderer::randomUnitVector3D() {  // computationally expensive
