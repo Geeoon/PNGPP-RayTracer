@@ -19,8 +19,8 @@
 int main() {
 	const double maxDist = DBL_MAX;
 	const unsigned int maxReflects = 500;
-	unsigned int width{ 100 };
-	unsigned int height{ 100 };
+	unsigned int width{ 1920 };
+	unsigned int height{ 1080 };
 	double ratio{ static_cast<double>(width) / height };
 	Scene sceneRoom{ std::make_unique<Camera>(Vector3D{ 0, 8, -15 }, Vector3D{ 0, 0, 0 }, ratio) };
 	sceneRoom.addLight(std::make_unique<PointLight>(Vector3D{ 0.0, 19, 5.0 }, std::make_unique<Material>(Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, 50, 0), 1, 400.0));
@@ -48,9 +48,9 @@ int main() {
 	simple.addObject(std::make_unique<Sphere>(2, Vector3D{ 0, 2, 5 }, std::make_unique<Material>(Vector3D{ 0.1, 0.0, 0.0 }, Vector3D{ 0.7, 0.0, 0.0 }, Vector3D{ 0.1, 0.1, 0.1 }, 100.0, 0.5)));
 	simple.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 10 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.3, 0.3, 0.3 }, Vector3D{ 0.5, 0.5, 0.5 }, Vector3D{ 0, 0, 0 }, 0, 0.1, 3)));
 
-	Scene refraction{ std::make_unique<Camera>(Vector3D{ 0, 2, 0 }, Vector3D{ 0, 0, 0 }, ratio) };
+	Scene refraction{ std::make_unique<Camera>(Vector3D{ 0, 1.0, 0 }, Vector3D{ 0, 0, 0 }, ratio) };
 	refraction.addLight(std::make_unique<Light>(Vector3D{ 0, 300, 0 }, std::make_unique<Material>(Vector3D{ 1, 1, 1 }, Vector3D{ 1, 1, 1 }, Vector3D{ 1, 1, 1 }), 1.0));
-	refraction.addObject(std::make_unique<Sphere>(1, Vector3D{ 0, 1.75, 3 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 0.0, 0.0, 1.0, 1.6)));
+	refraction.addObject(std::make_unique<Sphere>(1, Vector3D{ 0, 1.0, 3 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 0.0, 0.0, 1.0, 1.6)));
 	refraction.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.3, 0.3, 0.3 }, Vector3D{ 0.5, 0.5, 0.5 }, Vector3D{ 0, 0, 0 }, 0, 0.1, 3)));
 
 	Scene cornell{ std::make_unique<Camera>(Vector3D{ 0, 0, -7.5 }, Vector3D{ 0, 0, 0 }, ratio, 1.0) };
@@ -62,6 +62,7 @@ int main() {
 	cornell.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 5 }, Vector3D{ 0, 0, -1 }, std::make_unique<Material>(Vector3D{ 0.075, 0.075, 0.075 }, Vector3D{ 0.5, 0.5, 0.5 }, Vector3D{ 0.0, 0.0, 0.0 }, 0, 0)));  // back wall
 	cornell.addObject(std::make_unique<Plane>(Vector3D{ 0, 5, 0 }, Vector3D{ 0, -1, 0 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.0, 0.0, 0.0 }, 0, 0)));  // ceiling
 	cornell.addObject(std::make_unique<Plane>(Vector3D{ 0, -5, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Material>(Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.7, 0.7, 0.7 }, Vector3D{ 0.0, 0.0, 0.0 }, 0, 0)));  // floor
+	cornell.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, -8 }, Vector3D{ 0, 0, 1 }, std::make_unique<Material>(Vector3D{ 0.075, 0.0, 0.075 }, Vector3D{ 0.5, 0.0, 0.5 }, Vector3D{ 0.0, 0.0, 0.0 }, 0, 0)));  // behind wall
 	//cornell.addObject(std::make_unique<Sphere>(2, Vector3D{ 2, -3, -2 }, std::make_unique<Material>(Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.7, 0.7, 0.7 }, Vector3D{ 0.0, 0.0, 0.0 })));
 	//cornell.addObject(std::make_unique<Sphere>(2.5, Vector3D{ -1.5, -2.5, 2 }, std::make_unique<Material>(Vector3D{ 0.1, 0.1, 0.1 }, Vector3D{ 0.7, 0.7, 0.7 }, Vector3D{ 0.0, 0.0, 0.0 })));
 	cornell.addObject(std::make_unique<Sphere>(2.0, Vector3D{ 3, -3, 0.0 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 0.0, 0.0, 1.0, 1.52)));
@@ -74,14 +75,21 @@ int main() {
 	//pathTracing.addObject(std::make_unique<Plane>(Vector3D{ 0, 1000, 0 }, Vector3D{ 0, -1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0.18, 0.27, 0.36 }, 0.0, 0.0, 3)));  // sky
 	pathTracing.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.9, 0.0, 0.0 }, Vector3D{ 0, 0, 0 }, Vector3D{ 0, 0, 0 }, 0.0, 0.0, 3)));  // floor
 
+	Scene test{ std::make_unique<Camera>(Vector3D{ 0, 0.5, 0 }, Vector3D{ 0, 0, 0 }, ratio, 1.0) };
+	test.addLight(std::make_unique<Light>(Vector3D{ 0, 300, 0 }, std::make_unique<Material>(Vector3D{ 1, 1, 1 }, Vector3D{ 1, 1, 1 }, Vector3D{ 1, 1, 1 }), 1.0));
+	test.addObject(std::make_unique<Plane>(Vector3D{ 0, 0, 0 }, Vector3D{ 0, 1, 0 }, std::make_unique<Checkerboard>(Vector3D{ 0.3, 0.3, 0.3 }, Vector3D{ 0.5, 0.5, 0.5 }, Vector3D{ 0, 0, 0 }, 0, 0.1, 3)));
+	test.addObject(std::make_unique<Sphere>(1, Vector3D{ -1, 1, 2.5 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 100.0, 1)));
+	test.addObject(std::make_unique<Sphere>(1, Vector3D{ 1, 1, 2.5 }, std::make_unique<Material>(Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, Vector3D{ 0.0, 0.0, 0.0 }, 100.0, 1)));
+
 	Renderer renderer{};
 
 	//png::image<png::rgb_pixel_16>& image = renderer.renderMultithread(maxReflects, width, height, sceneRoom);
-	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, storm);
+	//png::image<png::rgb_pixel_16>& image = renderer.renderMultithread(maxReflects, width, height, storm);
 	//png::image<png::rgb_pixel_16>& image = renderer.renderMultithread(maxReflects, width, height, simple);
-	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, refraction);
-	//png::image<png::rgb_pixel_16>& image = renderer.render(maxReflects, width, height, cornell);
-	png::image<png::rgb_pixel_16>& image = renderer.renderPathTracingMultithread(10, width, height, pathTracing, 1000);
+	//png::image<png::rgb_pixel_16>& image = renderer.renderMultithread(maxReflects, width, height, refraction);
+	//png::image<png::rgb_pixel_16>& image = renderer.renderMultithread(maxReflects, width, height, cornell);
+	//png::image<png::rgb_pixel_16>& image = renderer.renderPathTracingMultithread(10, width, height, pathTracing, 100);
+	png::image<png::rgb_pixel_16>& image = renderer.renderMultithread(1000, width, height, test);
 
 	image.write("output.png");
 	return 0;
