@@ -5,11 +5,30 @@ Renderer::Renderer() : maxDist{ DBL_MAX }, mt_engine{ 1 }, theta_d{ 0.0, 2.0 }, 
 }
 
 png::image<png::rgb_pixel_16>& Renderer::renderMultithread(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene) {
-	auto dist = maxDist;
-	auto ratio{ static_cast<double>(width) / height };
 	auto screen = scene.getCamera()->screen;
 	image = png::image<png::rgb_pixel_16>{ width, height };
+	
+	std::vector<std::future<std::vector<std::vector<Vector3D>>>> threads;
 
+	for (size_t thread = 0; thread < threadCount; thread++) {
+		threads.push_back(std::async(&Renderer::renderSection, this, maxReflects, width, height, thread * width / threadCount, (thread + 1) * width / threadCount, std::ref(screen), std::ref(scene)));
+	}
+
+	for (size_t thread = 0; thread < threadCount; thread++) {
+		std::vector<std::vector<Vector3D>> output = threads[thread].get();
+		
+		for (png::uint_32 py = 0; py < output.size(); py++) {
+			for (png::uint_32 px = 0; px < output[py].size(); px++) {
+				image[py][px + (thread) * width / threadCount] = png::rgb_pixel_16{ static_cast<png::uint_16>(output[py][px].x), static_cast<png::uint_16>(output[py][px].y), static_cast<png::uint_16>(output[py][px].z) };
+			}
+		}
+	}
+	return image;
+}
+
+png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene) {
+	auto screen = scene.getCamera()->screen;
+	image = png::image<png::rgb_pixel_16>{ width, height };
 	for (png::uint_32 py = 0; py < image.get_height(); py++) {
 		auto y{ (screen.w) + ((screen.y - screen.w) / image.get_height() * (static_cast<double>(py) + 0.5)) };  // spots on screen for ray to shoot through
 		for (png::uint_32 px = 0; px < image.get_width(); px++) {
@@ -26,25 +45,26 @@ png::image<png::rgb_pixel_16>& Renderer::renderMultithread(unsigned int maxRefle
 	return image;
 }
 
-png::image<png::rgb_pixel_16>& Renderer::render(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene) {
-	auto dist = maxDist;
-	auto ratio{ static_cast<double>(width) / height };
-	auto screen = scene.getCamera()->screen;
-	image = png::image<png::rgb_pixel_16>{ width, height };
-	for (png::uint_32 py = 0; py < image.get_height(); py++) {
-		auto y{ (screen.w) + ((screen.y - screen.w) / image.get_height() * (static_cast<double>(py) + 0.5)) };  // spots on screen for ray to shoot through
-		for (png::uint_32 px = 0; px < image.get_width(); px++) {
-			auto x{ (screen.x) + ((screen.z - screen.x) / image.get_width() * (static_cast<double>(px) + 0.5)) };  // spots on screen for ray to shoot through
+std::vector<std::vector<Vector3D>> Renderer::renderSection(unsigned int maxReflects, unsigned int width, unsigned int height, unsigned int start, unsigned int end, Vector4D& screen, Scene& scene) {
+	std::vector<std::vector<Vector3D>> output;
+	output.resize(height);
+	for (std::vector<Vector3D>& vec : output) {
+		vec.resize(end - start);
+	}
+	for (png::uint_32 py = 0; py < height; py++) {
+		auto y{ (screen.w) + ((screen.y - screen.w) / height * (static_cast<double>(py) + 0.5)) };  // spots on screen for ray to shoot through
+		for (png::uint_32 px = start; px < end; px++) {
+			auto x{ (screen.x) + ((screen.z - screen.x) / width * (static_cast<double>(px) + 0.5)) };  // spots on screen for ray to shoot through
 			Vector3D pixel{ x + scene.getCamera()->position.x, y + scene.getCamera()->position.y, scene.getCamera()->position.z + 1 };
 			Vector3D finalColor{ 0, 0, 0 };
 			Ray ray{ scene.getCamera()->position, Vector3D::normalize(pixel - scene.getCamera()->position) };
 			finalColor = renderRay(scene, maxReflects, ray);
 			finalColor = Vector3D::clip(finalColor, 0, 1);
 			finalColor = finalColor * 65535;
-			image[image.get_height() - (py + 1)][px] = png::rgb_pixel_16{ static_cast<png::uint_16>(finalColor.x), static_cast<png::uint_16>(finalColor.y), static_cast<png::uint_16>(finalColor.z) };
+			output[height - (py + 1)][px - start] = finalColor;
 		}
 	}
-	return image;
+	return output;
 }
 
 png::image<png::rgb_pixel_16>& Renderer::renderPathTracing(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene, unsigned int samples) {
