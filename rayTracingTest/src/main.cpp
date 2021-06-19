@@ -19,8 +19,8 @@
 int main() {
 	const double maxDist = DBL_MAX;
 	const unsigned int maxReflects = 500;
-	unsigned int width{ 1920 };
-	unsigned int height{ 1080 };
+	unsigned int width{ 400 };
+	unsigned int height{ 400 };
 	double ratio{ static_cast<double>(width) / height };
 	Scene sceneRoom{ std::make_unique<Camera>(Vector3D{ 0, 8, -15 }, Vector3D{ 0, 0, 0 }, ratio) };
 	sceneRoom.addLight(std::make_unique<PointLight>(Vector3D{ 0.0, 19, 5.0 }, std::make_unique<Material>(Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, Vector3D{ .85, .91, 1.0 }, 50, 0), 1, 400.0));
@@ -89,7 +89,8 @@ int main() {
 	//png::image<png::rgb_pixel_16>& image = renderer.renderMultithread(maxReflects, width, height, refraction);
 	//png::image<png::rgb_pixel_16>& image = renderer.renderMultithread(maxReflects, width, height, cornell);
 	//png::image<png::rgb_pixel_16>& image = renderer.renderPathTracingMultithread(10, width, height, pathTracing, 100);
-	png::image<png::rgb_pixel_16>& image = renderer.renderMultithread(1000, width, height, test);
+	//png::image<png::rgb_pixel_16>& image = renderer.renderMultithread(1000, width, height, test);
+	png::image<png::rgb_pixel_16>& image = renderer.renderPathTracingAMP(10, width, height, pathTracing, 1);
 
 	image.write("output.png");
 	return 0;

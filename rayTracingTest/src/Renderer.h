@@ -7,6 +7,8 @@
 #include <future>
 #include <memory>
 #include <array>
+#include <amp_math.h>
+#include <amp.h>
 #include "vector/Vector4D.h"
 #include "vector/Vector3D.h"
 #include "objects/Object.h"
@@ -23,6 +25,7 @@ public:
 	png::image<png::rgb_pixel_16>& render(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene);
 	png::image<png::rgb_pixel_16>& renderMultithread(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene);
 	png::image<png::rgb_pixel_16>& renderPathTracing(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene, unsigned int samples);
+	png::image<png::rgb_pixel_16>& renderPathTracingAMP(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene, unsigned int samples);
 	png::image<png::rgb_pixel_16>& renderPathTracingMultithread(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene, unsigned int samples);
 
 private:

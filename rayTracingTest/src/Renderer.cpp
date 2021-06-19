@@ -126,6 +126,66 @@ png::image<png::rgb_pixel_16>& Renderer::renderPathTracing(unsigned int maxRefle
 	return image;
 }
 
+png::image<png::rgb_pixel_16>& Renderer::renderPathTracingAMP(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene, unsigned int samples) {
+	auto screen{ scene.getCamera()->screen };
+	image = png::image<png::rgb_pixel_16>{ width, height };
+	concurrency::array_view<float, 3> pixels(height, width, 6);
+	float sw{ static_cast<float>(screen.w) };
+	float sx{ static_cast<float>(screen.x) };
+	float sy{ static_cast<float>(screen.y) };
+	float sz{ static_cast<float>(screen.z) };
+	concurrency::extent<2> pixelsExt{ static_cast<int>(height), static_cast<int>(width) };
+	concurrency::parallel_for_each(pixelsExt,
+		[=](concurrency::index<2> idx) restrict(amp) {
+		int x = idx[0];
+		int y = idx[1];
+		float px{ (sx) + ((sz - sx) / width * (static_cast<float>(x) + 0.5f)) };
+		float py{ (sw) + ((sy - sw) / height * (static_cast<float>(y) + 0.5f)) };
+		float pz{ 1.0f };
+		float magnitude{ concurrency::fast_math::sqrt(px * px + py * py + pz * pz) };
+		float normX{ px / magnitude };
+		float normY{ py / magnitude };
+		float normZ{ pz / magnitude };
+		pixels(x, y, 0) = normX;
+		pixels(x, y, 1) = normY;
+		pixels(x, y, 2) = normZ;
+	});
+
+	for (size_t py = 0; py < height; py++) {
+		for (size_t px = 0; px < width; px++) {
+			Vector3D finalColor{ 0, 0, 0 };
+			Ray ray{ scene.getCamera()->position, Vector3D{ pixels(px, py, 0), pixels(px, py, 1), pixels(px, py, 2) } };
+			for (size_t i = 0; i < samples; i++) {
+				finalColor = finalColor + tracePath(ray, scene, 1.0, 0, maxReflects);
+			}
+			pixels(px, py, 3) = finalColor.x;
+			pixels(px, py, 4) = finalColor.y;
+			pixels(px, py, 5) = finalColor.z;
+		}
+	}
+
+	concurrency::extent<3> channelsExt{ static_cast<int>(height), static_cast<int>(width), 3 };
+	concurrency::parallel_for_each(channelsExt,
+		[=](concurrency::index<3> idx) restrict(amp) {
+		int x = idx[0];
+		int y = idx[1];
+		int channel = idx[2] + 3;
+		pixels(x, y, channel) = pixels(x, y, channel) / samples;
+		if (pixels(x, y, channel) > 1) {
+			pixels(x, y, channel) = 1;
+		}
+		pixels(x, y, channel) *= 65535;
+	});
+
+	for (png::uint_32 py = 0; py < image.get_height(); py++) {
+		for (png::uint_32 px = 0; px < image.get_width(); px++) {
+			image[image.get_height() - (py + 1)][px] = png::rgb_pixel_16{ static_cast<png::uint_16>(pixels(px, py, 3)), static_cast<png::uint_16>(pixels(px, py, 4)), static_cast<png::uint_16>(pixels(px, py, 5)) };
+		}
+	}
+
+	return image;
+}
+
 png::image<png::rgb_pixel_16>& Renderer::renderPathTracingMultithread(unsigned int maxReflects, unsigned int width, unsigned int height, Scene& scene, unsigned int samples) {
 
 	auto screen = scene.getCamera()->screen;
@@ -149,6 +209,8 @@ png::image<png::rgb_pixel_16>& Renderer::renderPathTracingMultithread(unsigned i
 
 	return image;
 }
+
+
 
 Vector3D Renderer::BlinnPhong(std::unique_ptr<Object>* obj, std::unique_ptr<Camera>& cam, const Vector3D& lightVector, const Vector3D& normalVector, const Vector3D& intersection, std::unique_ptr<Light>& light) {
 	Vector3D rgb{ 0, 0, 0 };
